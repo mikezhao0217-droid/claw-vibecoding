@@ -88,10 +88,11 @@ function findProjectAndMilestone(projectId: string, milestoneId: string) {
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string; milestoneId: string } }
+  { params }: { params: Promise<{ id: string; milestoneId: string }> }
 ) {
   try {
-    const { id: projectId, milestoneId } = params;
+    const awaitedParams = await params;
+    const { id: projectId, milestoneId } = awaitedParams;
     const { completed } = await request.json();
 
     const result = findProjectAndMilestone(projectId, milestoneId);

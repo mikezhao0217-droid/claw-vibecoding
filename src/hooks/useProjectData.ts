@@ -54,17 +54,20 @@ export const useProjectData = () => {
       });
 
       // Then update the server
+      const project = data.departments
+        .flatMap(d => d.teams)
+        .flatMap(t => t.projects)
+        .find(p => p.id === projectId);
+      
+      const milestone = project?.milestones.find(m => m.id === milestoneId);
+      
       const response = await fetch(`/api/projects/${projectId}/milestones/${milestoneId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          completed: !data.departments
-            .flatMap(d => d.teams)
-            .flatMap(t => t.projects)
-            .find(p => p.id === projectId)
-            ?.milestones.find(m => m.id === milestoneId)?.completed 
+          completed: !milestone?.completed 
         }),
       });
 
