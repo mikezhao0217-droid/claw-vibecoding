@@ -18,6 +18,10 @@
 - **Tailwind CSS**：实用优先的CSS框架
 - **JSON Storage**：使用GitHub仓库存储数据
 
+## 部署链接
+
+线上演示地址：[https://claw-vibecoding-git-main-mikezhaos-projects.vercel.app/](https://claw-vibecoding-git-main-mikezhaos-projects.vercel.app/)
+
 ## 架构说明
 
 - `/src/app` - Next.js App Router页面和布局
