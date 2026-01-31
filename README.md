@@ -48,7 +48,8 @@
 
 1. 创建 Supabase 项目并获取 API 密钥
 2. 复制 `.env.example` 为 `.env.local`
-3. 在 `.env.local` 中填入 Supabase URL 和密钥
+3. 在 `.env.local` 中填入 Supabase URL 和 publishable key
+4. 使用 NEXT_PUBLIC_SUPABASE_URL 和 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY 作为环境变量名
 
 ## 部署
 
