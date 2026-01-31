@@ -20,7 +20,9 @@
 
 ## 部署链接
 
-线上演示地址：[https://claw-vibecoding-git-main-mikezhaos-projects.vercel.app/](https://claw-vibecoding-git-main-mikezhaos-projects.vercel.app/)
+线上演示地址：[https://claw-vibecoding.vercel.app/](https://claw-vibecoding.vercel.app/)
+
+分享链接（公网可访问）：[https://claw-vibecoding.vercel.app?_vercel_share=TPgrc5yZ9cFxUf49IPS8h5aOJvJlWSzY](https://claw-vibecoding.vercel.app?_vercel_share=TPgrc5yZ9cFxUf49IPS8h5aOJvJlWSzY)
 
 ## 架构说明
 
