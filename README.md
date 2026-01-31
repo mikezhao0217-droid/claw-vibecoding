@@ -10,13 +10,14 @@
 - **进度可视化**：直观显示完成百分比
 - **实时更新**：点击复选框即可标记里程碑完成状态
 - **响应式设计**：适配桌面和移动设备
+- **数据持久化**：使用Supabase数据库保存数据
 
 ## 技术栈
 
 - **Next.js 16.1.6**：React框架，支持App Router
 - **TypeScript**：类型安全
 - **Tailwind CSS**：实用优先的CSS框架
-- **JSON Storage**：使用GitHub仓库存储数据
+- **Supabase**：PostgreSQL数据库即服务，用于数据持久化
 
 ## 部署链接
 
@@ -30,17 +31,24 @@
 - `/src/components` - 可重用UI组件
 - `/src/types` - TypeScript类型定义
 - `/src/hooks` - 自定义React hooks
+- `/src/lib` - 第三方库配置（如Supabase）
+- `/src/services` - 业务逻辑服务（数据操作）
 - `/src/utils` - 工具函数
-- `/src/data` - 项目数据存储（JSON格式）
 
 ## 数据模型
 
-数据存储在 `/src/data/projects.json` 中，包含以下结构：
+数据存储在Supabase数据库中，包含以下结构：
 
 - 部门 (Departments)
   - 团队 (Teams)
     - 项目 (Projects)
       - 里程碑 (Milestones)
+
+## 配置环境
+
+1. 创建 Supabase 项目并获取 API 密钥
+2. 复制 `.env.example` 为 `.env.local`
+3. 在 `.env.local` 中填入 Supabase URL 和密钥
 
 ## 部署
 
@@ -56,13 +64,12 @@
 2. 启动开发服务器：`npm run dev`
 3. 访问 `http://localhost:3000`
 
-## 数据更新
+## 数据持久化
 
-在当前实现中，我们使用模拟数据。在生产环境中，可以：
-
-1. 通过GitHub API更新JSON文件
-2. 集成简单的后端API
-3. 使用第三方服务如Airtable或Google Sheets
+项目现在使用 Supabase 数据库进行数据持久化：
+1. 里程碑状态变更会保存到云端数据库
+2. 刷新页面后数据不会丢失
+3. 支持多用户协作访问
 
 ## 使用场景
 
