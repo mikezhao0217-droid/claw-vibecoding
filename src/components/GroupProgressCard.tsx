@@ -6,9 +6,11 @@ import { GroupProgress } from '@/types/project';
 interface GroupProgressCardProps {
   group: GroupProgress;
   groupName: string; // 'department' or 'team'
+  hideDeleted?: boolean;
+  members?: string[]; // Array of member names to display as tags
 }
 
-const GroupProgressCard: React.FC<GroupProgressCardProps> = ({ group, groupName }) => {
+const GroupProgressCard: React.FC<GroupProgressCardProps> = ({ group, groupName, hideDeleted = false, members }) => {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border border-gray-200 dark:border-gray-700">
       <div className="p-4">
@@ -35,6 +37,20 @@ const GroupProgressCard: React.FC<GroupProgressCardProps> = ({ group, groupName 
             }}
           ></div>
         </div>
+        
+        {/* Member tags */}
+        {members && members.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1">
+            {members.map((member, index) => (
+              <span 
+                key={index}
+                className="inline-block px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+              >
+                {member}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

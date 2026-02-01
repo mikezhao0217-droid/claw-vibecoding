@@ -157,43 +157,53 @@ export default function Home() {
   const completedMilestones = allMilestones.filter(m => m.completed).length;
   const overallProgress = totalMilestones > 0 ? Math.round((completedMilestones / totalMilestones) * 100) : 0;
 
-  // Calculate department progress
-  const departmentProgress = data.departments.map(dept => {
-    const deptProjects = data.userProjects.filter(p => p.department === dept.id);
-    const deptMilestones = deptProjects.flatMap(p => p.milestones);
-    const totalDeptMilestones = deptMilestones.length;
-    const completedDeptMilestones = deptMilestones.filter(m => m.completed).length;
-    const deptProgress = totalDeptMilestones > 0 ? Math.round((completedDeptMilestones / totalDeptMilestones) * 100) : 0;
+  // Calculate department progress - only for non-deleted departments
+  const departmentProgress = data.departments
+    .filter(dept => !dept.deleted) // Filter out deleted departments
+    .map(dept => {
+      const deptProjects = data.userProjects.filter(p => p.department === dept.id);
+      const deptMilestones = deptProjects.flatMap(p => p.milestones);
+      const totalDeptMilestones = deptMilestones.length;
+      const completedDeptMilestones = deptMilestones.filter(m => m.completed).length;
+      const deptProgress = totalDeptMilestones > 0 ? Math.round((completedDeptMilestones / totalDeptMilestones) * 100) : 0;
+      
+      // Get unique members in this department
+      const members = [...new Set(deptProjects.map(p => p.owner))];
 
-    return {
-      id: dept.id,
-      name: dept.name,
-      totalMilestones: totalDeptMilestones,
-      completedMilestones: completedDeptMilestones,
-      progressPercentage: deptProgress
-    };
-  }).sort((a, b) => b.progressPercentage - a.progressPercentage); // Sort by progress (highest first)
+      return {
+        id: dept.id,
+        name: dept.name,
+        totalMilestones: totalDeptMilestones,
+        completedMilestones: completedDeptMilestones,
+        progressPercentage: deptProgress,
+        members: members // Include members list
+      };
+    })
+    .sort((a, b) => b.progressPercentage - a.progressPercentage); // Sort by progress (highest first)
 
-  // Calculate team progress
-  const teamProgress = Array.from(new Set(data.userProjects.map(p => p.team))).map(teamId => {
-    const teamProjects = data.userProjects.filter(p => p.team === teamId);
-    const teamMilestones = teamProjects.flatMap(p => p.milestones);
-    const totalTeamMilestones = teamMilestones.length;
-    const completedTeamMilestones = teamMilestones.filter(m => m.completed).length;
-    const teamProgress = totalTeamMilestones > 0 ? Math.round((completedTeamMilestones / totalTeamMilestones) * 100) : 0;
+  // Calculate team progress - only for non-deleted teams
+  const teamProgress = data.teams
+    .filter(team => !team.deleted) // Filter out deleted teams
+    .map(team => {
+      const teamProjects = data.userProjects.filter(p => p.team === team.id);
+      const teamMilestones = teamProjects.flatMap(p => p.milestones);
+      const totalTeamMilestones = teamMilestones.length;
+      const completedTeamMilestones = teamMilestones.filter(m => m.completed).length;
+      const teamProgress = totalTeamMilestones > 0 ? Math.round((completedTeamMilestones / totalTeamMilestones) * 100) : 0;
+      
+      // Get unique members in this team
+      const members = [...new Set(teamProjects.map(p => p.owner))];
 
-    // Get team name from data.teams array
-    const teamInfo = data.teams.find(t => t.id === teamId);
-    const teamName = teamInfo ? teamInfo.name : teamId;
-
-    return {
-      id: teamId,
-      name: teamName,
-      totalMilestones: totalTeamMilestones,
-      completedMilestones: completedTeamMilestones,
-      progressPercentage: teamProgress
-    };
-  }).sort((a, b) => b.progressPercentage - a.progressPercentage); // Sort by progress (highest first)
+      return {
+        id: team.id,
+        name: team.name,
+        totalMilestones: totalTeamMilestones,
+        completedMilestones: completedTeamMilestones,
+        progressPercentage: teamProgress,
+        members: members // Include members list
+      };
+    })
+    .sort((a, b) => b.progressPercentage - a.progressPercentage); // Sort by progress (highest first)
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-black font-sans py-12">
@@ -365,7 +375,8 @@ export default function Home() {
                 <GroupProgressCard 
                   key={dept.id} 
                   group={dept} 
-                  groupName="department" 
+                  groupName="department"
+                  members={dept.members}
                 />
               ))}
             </div>
@@ -391,7 +402,8 @@ export default function Home() {
                 <GroupProgressCard 
                   key={team.id} 
                   group={team} 
-                  groupName="team" 
+                  groupName="team"
+                  members={team.members}
                 />
               ))}
             </div>
