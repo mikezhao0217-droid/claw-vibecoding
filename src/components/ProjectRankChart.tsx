@@ -98,10 +98,17 @@ const ProjectRankChart: React.FC<ProjectRankChartProps> = ({ projects, isEditing
           project: item.project
         })),
         type: 'bar',
+        itemStyle: {
+          color: '#4F46E5', // Indigo color for better visibility
+          borderRadius: [0, 4, 4, 0] // Slightly rounded corners
+        },
         label: {
           show: true,
           position: 'right',
-          formatter: '{c}%'
+          formatter: '{c}%',
+          fontSize: 12,
+          fontWeight: 'bold',
+          color: '#1F2937' // Dark gray for contrast
         }
       }],
       grid: {

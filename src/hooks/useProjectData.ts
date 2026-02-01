@@ -207,6 +207,34 @@ export const useProjectData = () => {
   // Configuration management functions
   const updatePageConfig = async (updatedConfig: any) => {
     try {
+      // Check if default milestones have changed to handle cascading updates
+      const oldDefaultMilestones = config?.defaultMilestones || [];
+      const newDefaultMilestones = updatedConfig.defaultMilestones || [];
+      
+      // Find differences between old and new default milestones
+      const oldMilestoneNames = oldDefaultMilestones.map((m: any) => m.name);
+      const newMilestoneNames = newDefaultMilestones.map((m: any) => m.name);
+      
+      // Find added milestones
+      const addedMilestones = newDefaultMilestones.filter((newMilestone: any) => 
+        !oldMilestoneNames.includes(newMilestone.name)
+      );
+      
+      // Find removed milestones
+      const removedMilestones = oldDefaultMilestones.filter((oldMilestone: any) => 
+        !newMilestoneNames.includes(oldMilestone.name)
+      );
+      
+      // Find modified milestones (same name, different properties or position)
+      const modifiedMilestones: { oldName: string, newName: string }[] = [];
+      oldDefaultMilestones.forEach((oldMilestone: any) => {
+        const newMilestone = newDefaultMilestones.find((m: any) => m.name === oldMilestone.name);
+        if (newMilestone && newMilestone.id !== oldMilestone.id) {
+          // If IDs are different but names match, it indicates a modification
+          modifiedMilestones.push({ oldName: oldMilestone.name, newName: newMilestone.name });
+        }
+      });
+
       // Optimistically update the UI
       setConfig(updatedConfig);
 
@@ -218,6 +246,87 @@ export const useProjectData = () => {
         console.error('Failed to update page config in database');
         const revertedConfig = await fetchPageConfigService();
         setConfig(revertedConfig);
+      } else {
+        // Apply cascading updates to user projects after successful config update
+        if (addedMilestones.length > 0 || removedMilestones.length > 0 || modifiedMilestones.length > 0) {
+          setData(prevData => {
+            if (!prevData) return prevData;
+            
+            // Create a copy of user projects
+            const updatedUserProjects = [...prevData.userProjects];
+            
+            // Process each user project
+            updatedUserProjects.forEach(project => {
+              const updatedMilestones = [...project.milestones];
+              
+              // Add new default milestones to each project (with completed=false)
+              addedMilestones.forEach((addedMilestone: any) => {
+                // Check if this milestone already exists in the project to avoid duplicates
+                const exists = updatedMilestones.some(m => m.name === addedMilestone.name);
+                if (!exists) {
+                  updatedMilestones.push({
+                    id: `proj-${project.id}-ms-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                    name: addedMilestone.name,
+                    completed: false
+                  });
+                }
+              });
+              
+              // Remove deleted default milestones from each project
+              removedMilestones.forEach((removedMilestone: any) => {
+                const index = updatedMilestones.findIndex(m => m.name === removedMilestone.name);
+                if (index !== -1) {
+                  updatedMilestones.splice(index, 1);
+                }
+              });
+              
+              // Update modified milestone names
+              modifiedMilestones.forEach(mod => {
+                const index = updatedMilestones.findIndex(m => m.name === mod.oldName);
+                if (index !== -1) {
+                  updatedMilestones[index] = {
+                    ...updatedMilestones[index],
+                    name: mod.newName
+                  };
+                }
+              });
+              
+              // Update the project's milestones
+              project.milestones = updatedMilestones;
+            });
+            
+            return {
+              ...prevData,
+              userProjects: updatedUserProjects
+            };
+          });
+          
+          // After updating the local state, save the updated projects to the database
+          setTimeout(async () => {
+            try {
+              const finalData = await fetchProjectData(); // Get latest data after state update
+              if (finalData) {
+                await updateProjectData({
+                  departments: finalData.departments || [],
+                  teams: finalData.teams || [],
+                  userProjects: finalData.userProjects || []
+                }).catch(error => {
+                  console.error('Failed to update user projects after default milestones change:', error);
+                  // Optionally reload data to revert changes if database update failed
+                  fetchProjectData().then(revertedData => {
+                    if (revertedData) {
+                      setData(revertedData);
+                    }
+                  }).catch(fetchError => {
+                    console.error('Failed to reload data after update failure:', fetchError);
+                  });
+                });
+              }
+            } catch (error) {
+              console.error('Error updating user projects after default milestones change:', error);
+            }
+          }, 0);
+        }
       }
     } catch (error) {
       console.error('Error updating page config:', error);
