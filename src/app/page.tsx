@@ -28,12 +28,19 @@ export default function Home() {
     if (!data) return;
     
     // Create a new project with default values
+    // Only use department and team IDs that exist in the database
+    const validDepartments = data.departments.map(d => d.id);
+    const validTeams = data.teams.map(t => t.id);
+    
+    const defaultDepartment = validDepartments.length > 0 ? validDepartments[0] : 'engineering';
+    const defaultTeam = validTeams.length > 0 ? validTeams[0] : 'frontend';
+    
     const newProject = {
       id: `project-${Date.now()}`, // Generate a unique ID
       name: '新项目',
       owner: '新负责人',
-      department: 'engineering',
-      team: 'frontend',
+      department: defaultDepartment,
+      team: defaultTeam,
       milestones: [
         { id: 'planning', name: '项目规划', completed: false },
         { id: 'development', name: '开发阶段', completed: false },
