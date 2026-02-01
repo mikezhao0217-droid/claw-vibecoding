@@ -1,39 +1,150 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { UserProject } from '@/types/project';
 
 interface UserProjectCardProps {
   project: UserProject;
   onToggleMilestone: (projectId: string, milestoneId: string, userId: string) => void;
+  onProjectUpdate: (updatedProject: UserProject) => void;
+  onProjectDelete: (projectId: string) => void;
+  isEditing: boolean;
 }
 
-const UserProjectCard: React.FC<UserProjectCardProps> = ({ project, onToggleMilestone }) => {
+const UserProjectCard: React.FC<UserProjectCardProps> = ({ 
+  project, 
+  onToggleMilestone, 
+  onProjectUpdate,
+  onProjectDelete,
+  isEditing 
+}) => {
+  const [isEditingLocal, setIsEditingLocal] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: project.name,
+    owner: project.owner,
+    department: project.department,
+    team: project.team
+  });
+  
   const completedCount = project.milestones.filter(m => m.completed).length;
   const totalCount = project.milestones.length;
   const progressPercentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+
+  const handleSave = () => {
+    const updatedProject = {
+      ...project,
+      name: editForm.name,
+      owner: editForm.owner,
+      department: editForm.department,
+      team: editForm.team
+    };
+    onProjectUpdate(updatedProject);
+    setIsEditingLocal(false);
+  };
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border border-gray-200 dark:border-gray-700 transition-all duration-200 hover:shadow-lg">
       <div className="p-5">
         <div className="flex justify-between items-start">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">{project.name}</h3>
+          <div className="flex-1">
+            {isEditing && !isEditingLocal ? (
+              <button
+                onClick={() => setIsEditingLocal(true)}
+                className="text-left text-lg font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+              >
+                {project.name}
+              </button>
+            ) : isEditingLocal ? (
+              <input
+                type="text"
+                value={editForm.name}
+                onChange={(e) => setEditForm({...editForm, name: e.target.value})}
+                className="w-full text-lg font-semibold text-gray-900 dark:text-white mb-1 border rounded px-2 py-1"
+                onBlur={handleSave}
+                onKeyDown={(e) => e.key === 'Enter' && handleSave()}
+              />
+            ) : (
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">{project.name}</h3>
+            )}
+            
             <div className="flex flex-wrap gap-2 mb-3">
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">
-                负责人: {project.owner}
-              </span>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
-                {project.department}
-              </span>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100">
-                {project.team}
-              </span>
+              {isEditing && !isEditingLocal ? (
+                <button
+                  onClick={() => setIsEditingLocal(true)}
+                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100"
+                >
+                  负责人: {project.owner}
+                </button>
+              ) : isEditingLocal ? (
+                <input
+                  type="text"
+                  value={editForm.owner}
+                  onChange={(e) => setEditForm({...editForm, owner: e.target.value})}
+                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100 border"
+                  onBlur={handleSave}
+                />
+              ) : (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">
+                  负责人: {project.owner}
+                </span>
+              )}
+              
+              {isEditing && !isEditingLocal ? (
+                <button
+                  onClick={() => setIsEditingLocal(true)}
+                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
+                >
+                  {project.department}
+                </button>
+              ) : isEditingLocal ? (
+                <input
+                  type="text"
+                  value={editForm.department}
+                  onChange={(e) => setEditForm({...editForm, department: e.target.value})}
+                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 border"
+                  onBlur={handleSave}
+                />
+              ) : (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
+                  {project.department}
+                </span>
+              )}
+              
+              {isEditing && !isEditingLocal ? (
+                <button
+                  onClick={() => setIsEditingLocal(true)}
+                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100"
+                >
+                  {project.team}
+                </button>
+              ) : isEditingLocal ? (
+                <input
+                  type="text"
+                  value={editForm.team}
+                  onChange={(e) => setEditForm({...editForm, team: e.target.value})}
+                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100 border"
+                  onBlur={handleSave}
+                />
+              ) : (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100">
+                  {project.team}
+                </span>
+              )}
             </div>
           </div>
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
-            {progressPercentage}% 完成
-          </span>
+          <div className="flex flex-col items-end space-y-2">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
+              {progressPercentage}% 完成
+            </span>
+            {isEditing && (
+              <button
+                onClick={() => onProjectDelete(project.id)}
+                className="text-red-500 hover:text-red-700 text-sm"
+              >
+                删除
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Progress bar */}
@@ -52,8 +163,9 @@ const UserProjectCard: React.FC<UserProjectCardProps> = ({ project, onToggleMile
               <input
                 type="checkbox"
                 checked={milestone.completed}
-                onChange={() => onToggleMilestone(project.id, milestone.id, project.userId)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                onChange={() => isEditing && onToggleMilestone(project.id, milestone.id, project.userId)}
+                disabled={!isEditing}
+                className={isEditing ? "h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" : "h-4 w-4 text-blue-400 focus:ring-blue-300 border-gray-300 rounded cursor-not-allowed opacity-60"}
               />
               <label 
                 htmlFor={`${project.id}-${milestone.id}`}

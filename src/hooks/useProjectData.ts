@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { ProjectData } from '@/types/project';
-import { fetchProjectData, toggleMilestoneCompletion as toggleMilestone } from '@/services/projectService';
+import { fetchProjectData, toggleMilestoneCompletion as toggleMilestone, updateProjectData as updateProjectDataService } from '@/services/projectService';
 
 export const useProjectData = () => {
   const [data, setData] = useState<ProjectData | null>(null);
@@ -70,9 +70,32 @@ export const useProjectData = () => {
     }
   };
 
+  const updateProjectData = async (updatedData: ProjectData) => {
+    try {
+      // Optimistically update the UI
+      setData(updatedData);
+
+      // Then update in Supabase
+      const success = await updateProjectDataService(updatedData);
+      
+      if (!success) {
+        // If the server update fails, revert the optimistic update
+        console.error('Failed to update project data in database');
+        const revertedData = await fetchProjectData();
+        setData(revertedData);
+      }
+    } catch (error) {
+      console.error('Error updating project data:', error);
+      // Revert the optimistic update in case of network error
+      const revertedData = await fetchProjectData();
+      setData(revertedData);
+    }
+  };
+
   return {
     data,
     loading,
-    toggleMilestoneCompletion
+    toggleMilestoneCompletion,
+    updateProjectData
   };
 };

@@ -6,8 +6,77 @@ import GroupProgressCard from '@/components/GroupProgressCard';
 import { useProjectData } from '@/hooks/useProjectData';
 
 export default function Home() {
-  const { data, loading, toggleMilestoneCompletion } = useProjectData();
+  const { data, loading, toggleMilestoneCompletion, updateProjectData } = useProjectData();
   const [currentUser] = useState("current-user"); // In a real app, this would come from authentication
+  const [isEditing, setIsEditing] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+
+  const handlePasswordSubmit = () => {
+    if (passwordInput === 'pimsvibe') {
+      setIsEditing(true);
+      setShowPasswordModal(false);
+      setPasswordError('');
+      setPasswordInput('');
+    } else {
+      setPasswordError('密码错误，请重试');
+    }
+  };
+
+  const handleAddProject = () => {
+    if (!data) return;
+    
+    // Create a new project with default values
+    const newProject = {
+      id: `project-${Date.now()}`, // Generate a unique ID
+      name: '新项目',
+      owner: '新负责人',
+      department: 'engineering',
+      team: 'frontend',
+      milestones: [
+        { id: 'planning', name: '项目规划', completed: false },
+        { id: 'development', name: '开发阶段', completed: false },
+        { id: 'testing', name: '测试阶段', completed: false }
+      ],
+      userId: currentUser
+    };
+    
+    const updatedData = {
+      ...data,
+      userProjects: [...data.userProjects, newProject]
+    };
+    
+    updateProjectData(updatedData);
+  };
+
+  const handleProjectUpdate = (updatedProject: any) => {
+    if (!data) return;
+    
+    const updatedProjects = data.userProjects.map(proj => 
+      proj.id === updatedProject.id ? updatedProject : proj
+    );
+    
+    const updatedData = {
+      ...data,
+      userProjects: updatedProjects
+    };
+    
+    updateProjectData(updatedData);
+  };
+
+  const handleProjectDelete = (projectId: string) => {
+    if (!data) return;
+    
+    const updatedProjects = data.userProjects.filter(proj => proj.id !== projectId);
+    
+    const updatedData = {
+      ...data,
+      userProjects: updatedProjects
+    };
+    
+    updateProjectData(updatedData);
+  };
 
   if (loading) {
     return (
@@ -92,7 +161,26 @@ export default function Home() {
     <div className="min-h-screen bg-zinc-50 dark:bg-black font-sans py-12">
       <div className="container mx-auto px-4">
         <header className="mb-12 text-center">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">Web编码竞赛项目进度仪表板</h1>
+          <div className="flex justify-between items-center mb-4">
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-white">Web编码竞赛项目进度仪表板</h1>
+            <div className="flex space-x-3">
+              {!isEditing ? (
+                <button
+                  onClick={() => setShowPasswordModal(true)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  编辑模式
+                </button>
+              ) : (
+                <button
+                  onClick={() => setIsEditing(false)}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  退出编辑
+                </button>
+              )}
+            </div>
+          </div>
           <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
             个性化项目跟踪，按进度排名的竞赛视图
           </p>
@@ -118,7 +206,17 @@ export default function Home() {
         <main>
           {/* Personal Projects Section - Ranked by completion */}
           <section className="mb-16">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">个人项目排名</h2>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">个人项目排名</h2>
+              {isEditing && (
+                <button
+                  onClick={handleAddProject}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  添加项目
+                </button>
+              )}
+            </div>
             <p className="text-gray-600 dark:text-gray-400 text-center mb-8">
               按完成度排序（进度快的在上，慢的在下）
             </p>
@@ -129,6 +227,9 @@ export default function Home() {
                   key={project.id} 
                   project={project} 
                   onToggleMilestone={toggleMilestoneCompletion} 
+                  onProjectUpdate={handleProjectUpdate}
+                  onProjectDelete={handleProjectDelete}
+                  isEditing={isEditing}
                 />
               ))}
             </div>
@@ -168,6 +269,44 @@ export default function Home() {
             Web编码竞赛项目仪表板 • 个性化跟踪与竞赛排名
           </p>
         </footer>
+
+        {/* Password Modal */}
+        {showPasswordModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">请输入编辑密码</h3>
+              <input
+                type="password"
+                value={passwordInput}
+                onChange={(e) => setPasswordInput(e.target.value)}
+                placeholder="输入密码"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md mb-3 dark:bg-gray-700 dark:text-white"
+                autoFocus
+                onKeyDown={(e) => e.key === 'Enter' && handlePasswordSubmit()}
+              />
+              {passwordError && (
+                <p className="text-red-500 text-sm mb-3">{passwordError}</p>
+              )}
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => {
+                    setShowPasswordModal(false);
+                    setPasswordError('');
+                  }}
+                  className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={handlePasswordSubmit}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                >
+                  确认
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
