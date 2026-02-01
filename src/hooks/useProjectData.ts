@@ -249,7 +249,8 @@ export const useProjectData = () => {
       } else {
         // Apply cascading updates to user projects after successful config update
         if (addedMilestones.length > 0 || removedMilestones.length > 0 || modifiedMilestones.length > 0) {
-          setData(prevData => {
+          // Create the updated data and save it separately to avoid race conditions
+          const updatedData = (prevData: any) => {
             if (!prevData) return prevData;
             
             // Create a copy of user projects
@@ -299,20 +300,23 @@ export const useProjectData = () => {
               ...prevData,
               userProjects: updatedUserProjects
             };
-          });
+          };
           
-          // After updating the local state, save the updated projects to the database
+          // First, optimistically update the UI
+          setData(prevData => updatedData(prevData));
+          
+          // Then, save the updated data to the database
           setTimeout(async () => {
             try {
-              const finalData = await fetchProjectData(); // Get latest data after state update
-              if (finalData) {
+              const dataToSave = updatedData(data);
+              if (dataToSave) {
                 await updateProjectData({
-                  departments: finalData.departments || [],
-                  teams: finalData.teams || [],
-                  userProjects: finalData.userProjects || []
+                  departments: dataToSave.departments || [],
+                  teams: dataToSave.teams || [],
+                  userProjects: dataToSave.userProjects || []
                 }).catch(error => {
                   console.error('Failed to update user projects after default milestones change:', error);
-                  // Optionally reload data to revert changes if database update failed
+                  // Reload data to revert changes if database update failed
                   fetchProjectData().then(revertedData => {
                     if (revertedData) {
                       setData(revertedData);

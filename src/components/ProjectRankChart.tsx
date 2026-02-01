@@ -108,7 +108,7 @@ const ProjectRankChart: React.FC<ProjectRankChartProps> = ({ projects, isEditing
           formatter: '{c}%',
           fontSize: 12,
           fontWeight: 'bold',
-          color: '#1F2937' // Dark gray for contrast
+          color: '#FFFFFF' // White color for better visibility on dark backgrounds
         }
       }],
       grid: {
