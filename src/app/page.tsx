@@ -77,11 +77,13 @@ export default function Home() {
     const defaultTeam = validTeams.length > 0 ? validTeams[0] : 'frontend';
     
     // Get default milestones and set them as unchecked for new project
-    const defaultMilestones = data?.config?.defaultMilestones || [];
-    const newProjectMilestones = defaultMilestones.map(dm => ({
-      ...dm,
-      completed: false // Set all default milestones as unchecked initially
-    }));
+    const defaultMilestones = data?.config?.defaultMilestones ?? [];
+    const newProjectMilestones = Array.isArray(defaultMilestones) 
+      ? defaultMilestones.map(dm => ({
+          ...dm,
+          completed: false // Set all default milestones as unchecked initially
+        }))
+      : [];
     
     const newProject = {
       id: `project-${Date.now()}`, // Generate a unique ID
