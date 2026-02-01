@@ -39,15 +39,15 @@ const UserProjectCard: React.FC<UserProjectCardProps> = ({
   // Helper function to handle toggling with default milestones
   const onToggleMilestoneWithDefaults = (milestone: any) => {
     // Check if this milestone already exists in the project
-    const existingMilestoneIndex = project.milestones.findIndex((m: any) => m.name === milestone.name);
+    const existingMilestone = project.milestones.find((m: any) => m.name === milestone.name);
     
-    if (existingMilestoneIndex !== -1) {
+    if (existingMilestone) {
       // Milestone exists in project, toggle its completion status
-      onToggleMilestone(project.id, project.milestones[existingMilestoneIndex].id, project.userId);
+      onToggleMilestone(project.id, existingMilestone.id, project.userId);
     } else {
       // Milestone doesn't exist in project, add it first with the correct completion status
       const newMilestone = {
-        id: `proj-${project.id}-ms-${Date.now()}`, // Generate a unique ID for this project's milestone
+        id: `proj-${project.id}-ms-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Generate a unique ID for this project's milestone
         name: milestone.name,
         completed: !milestone.completed // Toggle the status
       };
@@ -58,10 +58,10 @@ const UserProjectCard: React.FC<UserProjectCardProps> = ({
         milestones: [...project.milestones, newMilestone]
       };
       
-      // Update the project
+      // Update the project first
       onProjectUpdate(updatedProject);
       
-      // Then toggle the milestone
+      // Then toggle the milestone to ensure the completion state is correct
       setTimeout(() => {
         onToggleMilestone(project.id, newMilestone.id, project.userId);
       }, 0);
@@ -221,15 +221,22 @@ const UserProjectCard: React.FC<UserProjectCardProps> = ({
             let milestonesToDisplay = project.milestones;
             
             if (defaultMilestones && defaultMilestones.length > 0) {
-              // If we have default milestones, map them to the project's state
+              // If we have default milestones, use them as the base but merge with project's actual state
               milestonesToDisplay = defaultMilestones.map(dm => {
-                // Check if this default milestone exists in the project and is completed
+                // Check if this default milestone exists in the project and get its actual state
                 const projectMilestone = project.milestones.find(pm => pm.name === dm.name);
                 return {
                   ...dm,
                   completed: projectMilestone ? projectMilestone.completed : false,
                   id: projectMilestone ? projectMilestone.id : dm.id
                 };
+              });
+              
+              // Add any project-specific milestones that aren't in defaults
+              project.milestones.forEach(pm => {
+                if (!defaultMilestones.some(dm => dm.name === pm.name)) {
+                  milestonesToDisplay.push(pm);
+                }
               });
             }
             
