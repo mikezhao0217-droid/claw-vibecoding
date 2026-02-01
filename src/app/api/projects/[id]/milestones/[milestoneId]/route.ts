@@ -8,10 +8,14 @@ export async function PATCH(
   try {
     const awaitedParams = await params;
     const { id: projectId, milestoneId } = awaitedParams;
-    const { completed } = await request.json();
+    const requestData = await request.json();
+    const { completed, userId } = requestData;
 
     // Use the service function to update milestone in database
-    const success = await toggleMilestoneCompletion(projectId, milestoneId);
+    // Note: In a real implementation, userId should come from authentication
+    // For now, we'll use a default value or the one provided in request
+    const actualUserId = userId || 'default-user';
+    const success = await toggleMilestoneCompletion(projectId, milestoneId, actualUserId);
     
     if (!success) {
       return Response.json(

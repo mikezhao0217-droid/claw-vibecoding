@@ -9,13 +9,19 @@ export async function GET(request: NextRequest) {
       return Response.json(data);
     } else {
       // Return empty structure if no data exists
-      return Response.json({ departments: [] });
+      return Response.json({ 
+        departments: [],
+        teams: [],
+        userProjects: []
+      });
     }
   } catch (error) {
     console.error('Error in GET /api/projects:', error);
     return Response.json({ 
       error: 'Failed to fetch project data',
-      departments: []
+      departments: [],
+      teams: [],
+      userProjects: []
     }, { status: 500 });
   }
 }

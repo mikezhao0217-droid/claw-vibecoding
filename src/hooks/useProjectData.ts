@@ -23,7 +23,7 @@ export const useProjectData = () => {
     fetchData();
   }, []);
 
-  const toggleMilestoneCompletion = async (projectId: string, milestoneId: string) => {
+  const toggleMilestoneCompletion = async (projectId: string, milestoneId: string, userId: string) => {
     if (!data) return;
 
     try {
@@ -33,17 +33,20 @@ export const useProjectData = () => {
 
         const newData = JSON.parse(JSON.stringify(prevData)) as ProjectData;
 
-        for (const dept of newData.departments) {
-          for (const team of dept.teams) {
-            for (const project of team.projects) {
-              if (project.id === projectId) {
-                const milestone = project.milestones.find(m => m.id === milestoneId);
-                if (milestone) {
-                  milestone.completed = !milestone.completed;
-                  return newData;
-                }
-              }
-            }
+        // Find and update the specific user's project
+        const projectIndex = newData.userProjects.findIndex(
+          p => p.id === projectId && p.userId === userId
+        );
+        
+        if (projectIndex !== -1) {
+          const project = newData.userProjects[projectIndex];
+          const milestoneIndex = project.milestones.findIndex(m => m.id === milestoneId);
+          
+          if (milestoneIndex !== -1) {
+            // Toggle the milestone completion status
+            newData.userProjects[projectIndex].milestones[milestoneIndex].completed = 
+              !newData.userProjects[projectIndex].milestones[milestoneIndex].completed;
+            return newData;
           }
         }
 
@@ -51,7 +54,7 @@ export const useProjectData = () => {
       });
 
       // Then update in Supabase
-      const success = await toggleMilestone(projectId, milestoneId);
+      const success = await toggleMilestone(projectId, milestoneId, userId);
       
       if (!success) {
         // If the server update fails, revert the optimistic update
