@@ -427,12 +427,6 @@ export default function Home() {
           </section>
         </main>
 
-        <footer className="mt-16 pt-8 border-t border-gray-200 dark:border-gray-700 text-center">
-          <p className="text-gray-600 dark:text-gray-400">
-            Web编码竞赛项目仪表板 • 个性化跟踪与竞赛排名
-          </p>
-        </footer>
-
         {/* Password Modal */}
         {showPasswordModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
