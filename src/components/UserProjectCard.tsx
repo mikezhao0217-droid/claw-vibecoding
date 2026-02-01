@@ -88,7 +88,7 @@ const UserProjectCard: React.FC<UserProjectCardProps> = ({
             {isEditing && !isEditingLocal ? (
               <button
                 onClick={() => setIsEditingLocal(true)}
-                className="text-left text-lg font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                className="text-left text-lg font-semibold text-green-700 dark:text-green-300 hover:underline"
               >
                 {project.name}
               </button>
@@ -102,14 +102,14 @@ const UserProjectCard: React.FC<UserProjectCardProps> = ({
                 onKeyDown={(e) => e.key === 'Enter' && handleSave()}
               />
             ) : (
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">{project.name}</h3>
+              <h3 className="text-lg font-semibold text-green-700 dark:text-green-300 mb-1">{project.name}</h3>
             )}
             
             <div className="flex flex-wrap gap-2 mb-3">
               {isEditing && !isEditingLocal ? (
                 <button
                   onClick={() => setIsEditingLocal(true)}
-                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100"
+                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
                 >
                   负责人: {project.owner}
                 </button>
@@ -122,7 +122,7 @@ const UserProjectCard: React.FC<UserProjectCardProps> = ({
                   onBlur={handleSave}
                 />
               ) : (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
                   负责人: {project.owner}
                 </span>
               )}
@@ -248,12 +248,12 @@ const UserProjectCard: React.FC<UserProjectCardProps> = ({
                   onChange={() => isEditing && onToggleMilestoneWithDefaults(milestone)}
                   disabled={!isEditing}
                   className={isEditing ? "h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" : 
-                             milestone.completed ? "h-4 w-4 text-red-500 focus:ring-red-300 border-gray-300 rounded cursor-not-allowed" :
+                             milestone.completed ? "h-4 w-4 text-green-500 focus:ring-green-300 border-gray-300 rounded cursor-not-allowed" :
                              "h-4 w-4 text-gray-400 focus:ring-gray-300 border-gray-300 rounded cursor-not-allowed opacity-60"}
                 />
                 <label 
                   htmlFor={`${project.id}-${milestone.id}`}
-                  className={`ml-2 text-sm ${milestone.completed ? 'line-through text-red-600 dark:text-red-400' : 'text-gray-700 dark:text-gray-300'}`}
+                  className={`ml-2 text-sm ${milestone.completed ? 'line-through text-green-600 dark:text-green-400' : 'text-gray-700 dark:text-gray-300'}`}
                 >
                   {milestone.name}
                 </label>
