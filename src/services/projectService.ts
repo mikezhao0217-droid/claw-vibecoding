@@ -653,17 +653,20 @@ export const deleteDepartment = async (id: string): Promise<boolean> => {
     const { error } = await supabase
       .from(DEPARTMENTS_TABLE)
       .update({ deleted: true })
-      .eq('id', id);
+      .eq('id', id)
+      .select(); // Adding select() might help with RLS policy verification
 
     if (error) {
       console.error('Error marking department as deleted:', error);
+      console.error('Error details:', error.details, error.hint, error.message);
       return false;
     }
 
     console.log(`Successfully marked department as deleted: ${id}`);
     return true;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Unexpected error marking department as deleted:', error);
+    console.error('Error details:', error.details, error.hint, error.message);
     return false;
   }
 };
@@ -734,17 +737,20 @@ export const deleteTeam = async (id: string): Promise<boolean> => {
     const { error } = await supabase
       .from(TEAMS_TABLE)
       .update({ deleted: true })
-      .eq('id', id);
+      .eq('id', id)
+      .select(); // Adding select() might help with RLS policy verification
 
     if (error) {
       console.error('Error marking team as deleted:', error);
+      console.error('Error details:', error.details, error.hint, error.message);
       return false;
     }
 
     console.log(`Successfully marked team as deleted: ${id}`);
     return true;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Unexpected error marking team as deleted:', error);
+    console.error('Error details:', error.details, error.hint, error.message);
     return false;
   }
 };
