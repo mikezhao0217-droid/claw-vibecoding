@@ -85,7 +85,7 @@ const ProjectRankChart: React.FC<ProjectRankChartProps> = ({ projects, isEditing
       },
       yAxis: {
         type: 'category',
-        data: processedData.map(item => item.name),
+        data: processedData.map(item => `${item.name} (${item.project.owner})`),
         inverse: true, // Reverse to show highest at top
         axisLabel: {
           fontSize: 12
