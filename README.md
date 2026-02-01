@@ -37,8 +37,14 @@
 
 ## 数据模型
 
-数据存储在Supabase数据库中，包含以下结构：
+数据存储在Supabase数据库中，包含以下表结构：
 
+- `page_config`: 页面配置表 (id, project_name, company_progress_title, department_progress_title, team_progress_title)
+- `departments`: 部门表 (id, name)
+- `teams`: 团队表 (id, name, department_id)
+- `user_projects`: 用户项目表 (id, name, owner, department, team, milestones, user_id)
+
+数据结构层次：
 - 部门 (Departments)
   - 团队 (Teams)
     - 项目 (Projects)
@@ -50,6 +56,7 @@
 2. 复制 `.env.example` 为 `.env.local`
 3. 在 `.env.local` 中填入 Supabase URL 和 publishable key
 4. 使用 NEXT_PUBLIC_SUPABASE_URL 和 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY 作为环境变量名
+5. 在 Supabase 仪表板的 SQL Editor 中运行 `database-schema.sql` 中的脚本来创建表结构
 
 ## 部署
 
