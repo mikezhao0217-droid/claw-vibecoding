@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Web编码竞赛仪表板",
+  title: "项目进度管理仪表板",
   description: "跟踪各部门和团队的项目里程碑进度",
 };
 
