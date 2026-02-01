@@ -8,20 +8,7 @@ import { initializeDatabase } from '@/services/projectService';
 
 export default function Home() {
   const { data, config, loading, toggleMilestoneCompletion, addProject, updateSingleProject, deleteProject, updatePageConfig } = useProjectData();
-  // In a real app, this would come from authentication
-  // Using a simple approach to generate a unique ID for each user session
-  const [currentUser] = useState(() => {
-    // Try to get user ID from localStorage, or generate a new one
-    if (typeof window !== 'undefined') {
-      let userId = localStorage.getItem('userId');
-      if (!userId) {
-        userId = `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        localStorage.setItem('userId', userId);
-      }
-      return userId;
-    }
-    return "unknown-user";
-  });
+  const [currentUser] = useState("current-user"); // All users see all projects
   const [isEditing, setIsEditing] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
@@ -141,9 +128,8 @@ export default function Home() {
     );
   }
 
-  // Filter projects for the current user and sort by completion rate (descending)
+  // Show all projects and sort by completion rate (descending)
   const userProjects = [...data.userProjects]
-    .filter(project => project.userId === currentUser || currentUser === "current-user") // For demo, show all projects
     .sort((a, b) => {
       const aProgress = a.milestones.filter(m => m.completed).length / a.milestones.length;
       const bProgress = b.milestones.filter(m => m.completed).length / b.milestones.length;
