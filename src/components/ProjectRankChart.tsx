@@ -80,7 +80,18 @@ const ProjectRankChart: React.FC<ProjectRankChartProps> = ({ projects, isEditing
       xAxis: {
         max: 100,
         axisLabel: {
-          formatter: '{value}%'
+          formatter: '{value}%',
+          color: '#FFFFFF' // White color for x-axis labels
+        },
+        axisLine: {
+          lineStyle: {
+            color: '#9CA3AF' // Light gray axis line
+          }
+        },
+        splitLine: {
+          lineStyle: {
+            color: '#374151' // Darker gray grid lines
+          }
         }
       },
       yAxis: {
@@ -88,7 +99,13 @@ const ProjectRankChart: React.FC<ProjectRankChartProps> = ({ projects, isEditing
         data: processedData.map(item => `${item.name} (${item.project.owner})`),
         inverse: true, // Reverse to show highest at top
         axisLabel: {
-          fontSize: 12
+          fontSize: 12,
+          color: '#FFFFFF' // White color for y-axis labels
+        },
+        axisLine: {
+          lineStyle: {
+            color: '#9CA3AF' // Light gray axis line
+          }
         }
       },
       series: [{
