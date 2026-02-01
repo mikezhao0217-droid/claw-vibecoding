@@ -13,6 +13,7 @@ export interface UserProject {
   team: string; // 小组
   milestones: Milestone[];
   userId: string; // 关联用户ID
+  deleted?: boolean; // 是否已删除（软删除标志）
 }
 
 // 部门信息

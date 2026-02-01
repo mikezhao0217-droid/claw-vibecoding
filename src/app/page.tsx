@@ -128,8 +128,9 @@ export default function Home() {
     );
   }
 
-  // Show all projects and sort by completion rate (descending)
+  // Show all non-deleted projects and sort by completion rate (descending)
   const userProjects = [...data.userProjects]
+    .filter(project => !project.deleted) // Filter out deleted projects
     .sort((a, b) => {
       const aProgress = a.milestones.filter(m => m.completed).length / a.milestones.length;
       const bProgress = b.milestones.filter(m => m.completed).length / b.milestones.length;

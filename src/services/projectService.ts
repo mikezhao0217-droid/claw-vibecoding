@@ -170,10 +170,11 @@ export const fetchProjectData = async (): Promise<ProjectData | null> => {
       departmentId: team.department_id
     }));
 
-    // Fetch user projects
+    // Fetch user projects (excluding those marked as deleted)
     const { data: userProjects, error: projectError } = await supabase
       .from(USER_PROJECTS_TABLE)
-      .select('*');
+      .select('*')
+      .is('deleted', false); // Only fetch non-deleted projects
 
     if (projectError) {
       console.error('Error fetching user projects:', projectError);
@@ -188,7 +189,8 @@ export const fetchProjectData = async (): Promise<ProjectData | null> => {
       department: project.department,
       team: project.team,
       milestones: project.milestones,
-      userId: project.user_id
+      userId: project.user_id,
+      deleted: project.deleted
     }));
 
     return {
@@ -352,6 +354,7 @@ export const addProject = async (project: UserProject): Promise<boolean> => {
         team: project.team,
         milestones: project.milestones,
         user_id: project.userId,
+        deleted: false, // Ensure new projects are not marked as deleted
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }]);
@@ -415,6 +418,7 @@ export const updateProject = async (project: UserProject): Promise<boolean> => {
         team: project.team,
         milestones: project.milestones,
         user_id: project.userId,
+        deleted: project.deleted || false, // Preserve the deleted status, default to false
         updated_at: new Date().toISOString()
       })
       .eq('id', project.id);
@@ -431,7 +435,7 @@ export const updateProject = async (project: UserProject): Promise<boolean> => {
   }
 };
 
-// Delete a project from the database
+// Delete a project from the database (soft delete using deleted flag)
 export const deleteProject = async (projectId: string): Promise<boolean> => {
   if (!supabase) {
     console.warn('Supabase not configured, skipping project deletion');
@@ -439,70 +443,21 @@ export const deleteProject = async (projectId: string): Promise<boolean> => {
   }
 
   try {
-    // The issue is likely related to RLS policies. Let's try to identify what conditions
-    // the RLS policy requires. Based on our policy setup, we allow all operations to anon users,
-    // so the issue might be different. Let's try to use a transaction approach.
-    
-    // First, let's fetch the project to get all its properties
-    const { data: projectData, error: fetchError } = await supabase
-      .from(USER_PROJECTS_TABLE)
-      .select('*')
-      .eq('id', projectId)
-      .single();
-
-    if (fetchError) {
-      console.error('Error fetching project before deletion:', fetchError);
-      return false;
-    }
-
-    if (!projectData) {
-      console.log(`Project with ID ${projectId} not found`);
-      return false;
-    }
-
-    // Now try to delete with a more complete match based on the fetched data
+    // Instead of physically deleting the record, set the deleted flag to true
     const { error } = await supabase
       .from(USER_PROJECTS_TABLE)
-      .delete()
-      .match({ 
-        id: projectId,
-        user_id: projectData.user_id // Include user_id in the match condition
-      });
+      .update({ deleted: true })
+      .eq('id', projectId);
 
     if (error) {
-      console.error('Error deleting project:', error);
-      console.log('Error details:', {
-        message: error.message,
-        code: error.code,
-        details: error.details,
-        hint: error.hint
-      });
-      
-      // If that fails, there might be an issue with RLS policy conditions
-      // Let's try to update the record instead to effectively "hide" it
-      const { error: updateError } = await supabase
-        .from(USER_PROJECTS_TABLE)
-        .update({ 
-          name: `[DELETED] ${projectData.name}`,
-          owner: '[DELETED]',
-          department: 'deleted',
-          team: 'deleted'
-        })
-        .eq('id', projectId);
-
-      if (updateError) {
-        console.error('Update as deletion also failed:', updateError);
-        return false;
-      } else {
-        console.log(`Project ${projectId} marked as deleted (via update)`);
-        return true; // Consider this successful for UX purposes
-      }
-    } else {
-      console.log(`Successfully deleted project with ID: ${projectId}`);
-      return true;
+      console.error('Error marking project as deleted:', error);
+      return false;
     }
+
+    console.log(`Successfully marked project as deleted: ${projectId}`);
+    return true;
   } catch (error) {
-    console.error('Unexpected error deleting project:', error);
+    console.error('Unexpected error marking project as deleted:', error);
     return false;
   }
 };
@@ -570,7 +525,8 @@ export const getDepartmentProgress = async (): Promise<any[]> => {
   try {
     const { data: userProjects, error } = await supabase
       .from(USER_PROJECTS_TABLE)
-      .select('*');
+      .select('*')
+      .is('deleted', false); // Only include non-deleted projects
 
     if (error) {
       console.error('Error fetching user projects for department progress:', error);
@@ -636,7 +592,8 @@ export const getTeamProgress = async (): Promise<any[]> => {
   try {
     const { data: userProjects, error } = await supabase
       .from(USER_PROJECTS_TABLE)
-      .select('*');
+      .select('*')
+      .is('deleted', false); // Only include non-deleted projects
 
     if (error) {
       console.error('Error fetching user projects for team progress:', error);
