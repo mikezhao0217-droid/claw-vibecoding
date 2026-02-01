@@ -201,7 +201,7 @@ export const fetchProjectData = async (): Promise<ProjectData | null> => {
   }
 };
 
-// Update project data in Supabase
+// Update project data in Supabase - more efficient approach
 export const updateProjectData = async (updatedData: ProjectData): Promise<boolean> => {
   if (!supabase) {
     console.warn('Supabase not configured, skipping data update');
@@ -209,7 +209,7 @@ export const updateProjectData = async (updatedData: ProjectData): Promise<boole
   }
 
   try {
-    // Update departments
+    // Update departments - for now keep the simple approach as departments don't change often
     if (updatedData.departments && updatedData.departments.length > 0) {
       // Clear existing departments and insert new ones
       await supabase.from(DEPARTMENTS_TABLE).delete().gt('id', '');
@@ -221,7 +221,7 @@ export const updateProjectData = async (updatedData: ProjectData): Promise<boole
       );
     }
 
-    // Update teams
+    // Update teams - for now keep the simple approach as teams don't change often
     if (updatedData.teams && updatedData.teams.length > 0) {
       // Clear existing teams and insert new ones
       await supabase.from(TEAMS_TABLE).delete().gt('id', '');
@@ -234,26 +234,162 @@ export const updateProjectData = async (updatedData: ProjectData): Promise<boole
       );
     }
 
-    // Update user projects
+    // For user projects, we need a more sophisticated approach to handle additions, updates, and deletions
     if (updatedData.userProjects && updatedData.userProjects.length > 0) {
-      // Clear existing user projects and insert new ones
-      await supabase.from(USER_PROJECTS_TABLE).delete().gt('id', '');
-      await supabase.from(USER_PROJECTS_TABLE).insert(
-        updatedData.userProjects.map(project => ({
-          id: project.id,
-          name: project.name,
-          owner: project.owner,
-          department: project.department,
-          team: project.team,
-          milestones: project.milestones,
-          user_id: project.userId
-        }))
-      );
+      // Fetch current projects to compare
+      const { data: currentProjects, error: fetchError } = await supabase
+        .from(USER_PROJECTS_TABLE)
+        .select('id');
+      
+      if (fetchError) {
+        console.error('Error fetching current projects:', fetchError);
+        // Fallback to simple approach
+        await supabase.from(USER_PROJECTS_TABLE).delete().gt('id', '');
+        await supabase.from(USER_PROJECTS_TABLE).insert(
+          updatedData.userProjects.map(project => ({
+            id: project.id,
+            name: project.name,
+            owner: project.owner,
+            department: project.department,
+            team: project.team,
+            milestones: project.milestones,
+            user_id: project.userId,
+            updated_at: new Date().toISOString()
+          }))
+        );
+        return true;
+      }
+
+      // Get current project IDs
+      const currentProjectIds = currentProjects?.map(p => p.id) || [];
+      const updatedProjectIds = updatedData.userProjects.map(p => p.id);
+
+      // Find projects to delete (exist in DB but not in updated data)
+      const projectsToDelete = currentProjectIds.filter(id => !updatedProjectIds.includes(id));
+
+      // Find projects to insert/update (exist in updated data)
+      const projectsToUpsert = updatedData.userProjects.map(project => ({
+        id: project.id,
+        name: project.name,
+        owner: project.owner,
+        department: project.department,
+        team: project.team,
+        milestones: project.milestones,
+        user_id: project.userId,
+        updated_at: new Date().toISOString()
+      }));
+
+      // Delete removed projects
+      if (projectsToDelete.length > 0) {
+        await supabase
+          .from(USER_PROJECTS_TABLE)
+          .delete()
+          .in('id', projectsToDelete);
+      }
+
+      // Upsert updated projects (this handles both inserts and updates)
+      if (projectsToUpsert.length > 0) {
+        await supabase
+          .from(USER_PROJECTS_TABLE)
+          .upsert(projectsToUpsert, { onConflict: 'id' }); // Use upsert to handle both insert and update
+      }
     }
 
     return true;
   } catch (error) {
     console.error('Unexpected error updating project data:', error);
+    return false;
+  }
+};
+
+// Add a new project to the database
+export const addProject = async (project: UserProject): Promise<boolean> => {
+  if (!supabase) {
+    console.warn('Supabase not configured, skipping project addition');
+    return false;
+  }
+
+  try {
+    const { error } = await supabase
+      .from(USER_PROJECTS_TABLE)
+      .insert([{
+        id: project.id,
+        name: project.name,
+        owner: project.owner,
+        department: project.department,
+        team: project.team,
+        milestones: project.milestones,
+        user_id: project.userId,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }]);
+
+    if (error) {
+      console.error('Error adding project:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Unexpected error adding project:', error);
+    return false;
+  }
+};
+
+// Update a specific project in the database
+export const updateProject = async (project: UserProject): Promise<boolean> => {
+  if (!supabase) {
+    console.warn('Supabase not configured, skipping project update');
+    return false;
+  }
+
+  try {
+    const { error } = await supabase
+      .from(USER_PROJECTS_TABLE)
+      .update({
+        name: project.name,
+        owner: project.owner,
+        department: project.department,
+        team: project.team,
+        milestones: project.milestones,
+        user_id: project.userId,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', project.id);
+
+    if (error) {
+      console.error('Error updating project:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Unexpected error updating project:', error);
+    return false;
+  }
+};
+
+// Delete a project from the database
+export const deleteProject = async (projectId: string): Promise<boolean> => {
+  if (!supabase) {
+    console.warn('Supabase not configured, skipping project deletion');
+    return false;
+  }
+
+  try {
+    const { error } = await supabase
+      .from(USER_PROJECTS_TABLE)
+      .delete()
+      .eq('id', projectId);
+
+    if (error) {
+      console.error('Error deleting project:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Unexpected error deleting project:', error);
     return false;
   }
 };

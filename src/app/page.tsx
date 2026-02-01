@@ -6,7 +6,7 @@ import GroupProgressCard from '@/components/GroupProgressCard';
 import { useProjectData } from '@/hooks/useProjectData';
 
 export default function Home() {
-  const { data, loading, toggleMilestoneCompletion, updateProjectData } = useProjectData();
+  const { data, loading, toggleMilestoneCompletion, addProject, updateSingleProject, deleteProject } = useProjectData();
   const [currentUser] = useState("current-user"); // In a real app, this would come from authentication
   const [isEditing, setIsEditing] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -42,40 +42,15 @@ export default function Home() {
       userId: currentUser
     };
     
-    const updatedData = {
-      ...data,
-      userProjects: [...data.userProjects, newProject]
-    };
-    
-    updateProjectData(updatedData);
+    addProject(newProject);
   };
 
   const handleProjectUpdate = (updatedProject: any) => {
-    if (!data) return;
-    
-    const updatedProjects = data.userProjects.map(proj => 
-      proj.id === updatedProject.id ? updatedProject : proj
-    );
-    
-    const updatedData = {
-      ...data,
-      userProjects: updatedProjects
-    };
-    
-    updateProjectData(updatedData);
+    updateSingleProject(updatedProject);
   };
 
   const handleProjectDelete = (projectId: string) => {
-    if (!data) return;
-    
-    const updatedProjects = data.userProjects.filter(proj => proj.id !== projectId);
-    
-    const updatedData = {
-      ...data,
-      userProjects: updatedProjects
-    };
-    
-    updateProjectData(updatedData);
+    deleteProject(projectId);
   };
 
   if (loading) {

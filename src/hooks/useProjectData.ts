@@ -1,8 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ProjectData } from '@/types/project';
-import { fetchProjectData, toggleMilestoneCompletion as toggleMilestone, updateProjectData as updateProjectDataService } from '@/services/projectService';
+import { ProjectData, UserProject } from '@/types/project';
+import { 
+  fetchProjectData, 
+  toggleMilestoneCompletion as toggleMilestone, 
+  updateProjectData as updateProjectDataService,
+  addProject as addProjectService,
+  updateProject as updateProjectService,
+  deleteProject as deleteProjectService
+} from '@/services/projectService';
 
 export const useProjectData = () => {
   const [data, setData] = useState<ProjectData | null>(null);
@@ -70,6 +77,101 @@ export const useProjectData = () => {
     }
   };
 
+  // More specific update functions for better database handling
+  const addProject = async (project: UserProject) => {
+    try {
+      // Optimistically update the UI
+      setData(prevData => {
+        if (!prevData) return prevData;
+        
+        return {
+          ...prevData,
+          userProjects: [...prevData.userProjects, project]
+        };
+      });
+
+      // Then update in Supabase
+      const success = await addProjectService(project);
+      
+      if (!success) {
+        // If the server update fails, revert the optimistic update
+        console.error('Failed to add project in database');
+        const revertedData = await fetchProjectData();
+        setData(revertedData);
+      }
+    } catch (error) {
+      console.error('Error adding project:', error);
+      // Revert the optimistic update in case of network error
+      const revertedData = await fetchProjectData();
+      setData(revertedData);
+    }
+  };
+
+  const updateSingleProject = async (updatedProject: UserProject) => {
+    try {
+      // Optimistically update the UI
+      setData(prevData => {
+        if (!prevData) return prevData;
+        
+        const updatedProjects = prevData.userProjects.map(proj => 
+          proj.id === updatedProject.id ? updatedProject : proj
+        );
+        
+        return {
+          ...prevData,
+          userProjects: updatedProjects
+        };
+      });
+
+      // Then update in Supabase
+      const success = await updateProjectService(updatedProject);
+      
+      if (!success) {
+        // If the server update fails, revert the optimistic update
+        console.error('Failed to update project in database');
+        const revertedData = await fetchProjectData();
+        setData(revertedData);
+      }
+    } catch (error) {
+      console.error('Error updating project:', error);
+      // Revert the optimistic update in case of network error
+      const revertedData = await fetchProjectData();
+      setData(revertedData);
+    }
+  };
+
+  const deleteProject = async (projectId: string) => {
+    try {
+      // Optimistically update the UI
+      setData(prevData => {
+        if (!prevData) return prevData;
+        
+        const updatedProjects = prevData.userProjects.filter(proj => proj.id !== projectId);
+        
+        return {
+          ...prevData,
+          userProjects: updatedProjects
+        };
+      });
+
+      // Then update in Supabase
+      const success = await deleteProjectService(projectId);
+      
+      if (!success) {
+        // If the server update fails, revert the optimistic update
+        console.error('Failed to delete project in database');
+        const revertedData = await fetchProjectData();
+        setData(revertedData);
+      }
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      // Revert the optimistic update in case of network error
+      const revertedData = await fetchProjectData();
+      setData(revertedData);
+    }
+  };
+
+  // Keep the original updateProjectData function for bulk operations
   const updateProjectData = async (updatedData: ProjectData) => {
     try {
       // Optimistically update the UI
@@ -96,6 +198,9 @@ export const useProjectData = () => {
     data,
     loading,
     toggleMilestoneCompletion,
-    updateProjectData
+    updateProjectData,
+    addProject,
+    updateSingleProject,
+    deleteProject
   };
 };
