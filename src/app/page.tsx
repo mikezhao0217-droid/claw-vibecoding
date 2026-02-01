@@ -75,13 +75,20 @@ export default function Home() {
     const defaultDepartment = validDepartments.length > 0 ? validDepartments[0] : 'engineering';
     const defaultTeam = validTeams.length > 0 ? validTeams[0] : 'frontend';
     
+    // Get default milestones and set them as unchecked for new project
+    const defaultMilestones = data?.config?.defaultMilestones || [];
+    const newProjectMilestones = defaultMilestones.map(dm => ({
+      ...dm,
+      completed: false // Set all default milestones as unchecked initially
+    }));
+    
     const newProject = {
       id: `project-${Date.now()}`, // Generate a unique ID
       name: '新项目',
       owner: '新负责人',
       department: defaultDepartment,
       team: defaultTeam,
-      milestones: [], // Start with empty milestones
+      milestones: newProjectMilestones, // Include all default milestones as unchecked
       userId: currentUser
     };
     
@@ -375,6 +382,49 @@ export default function Home() {
             </div>
             <div className="mt-3 text-sm text-gray-600 dark:text-gray-400">
               {completedMilestones} / {totalMilestones} 里程碑已完成
+            </div>
+          </div>
+          
+          {/* Individual Project Progress List - sorted by completion percentage descending */}
+          <div className="mt-8 max-w-6xl mx-auto">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-center">
+              个人项目进度排名
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {userProjects.map(project => {
+                const completedCount = project.milestones.filter(m => m.completed).length;
+                const totalCount = project.milestones.length;
+                const projectProgress = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+                
+                return (
+                  <div 
+                    key={project.id} 
+                    className="bg-white dark:bg-gray-800 rounded-lg shadow p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    onClick={() => {
+                      // Here we could implement showing a modal or expanding the project details
+                      console.log(`Clicked project: ${project.name}`);
+                    }}
+                  >
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
+                        {project.name}
+                      </span>
+                      <span className="text-xs font-bold text-blue-600 dark:text-blue-400">
+                        {projectProgress}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
+                      <div 
+                        className="bg-blue-500 h-2 rounded-full" 
+                        style={{ width: `${projectProgress}%` }}
+                      ></div>
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 text-center">
+                      {completedCount}/{totalCount}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </header>

@@ -247,11 +247,13 @@ const UserProjectCard: React.FC<UserProjectCardProps> = ({
                   checked={milestone.completed}
                   onChange={() => isEditing && onToggleMilestoneWithDefaults(milestone)}
                   disabled={!isEditing}
-                  className={isEditing ? "h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" : "h-4 w-4 text-blue-400 focus:ring-blue-300 border-gray-300 rounded cursor-not-allowed opacity-60"}
+                  className={isEditing ? "h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" : 
+                             milestone.completed ? "h-4 w-4 text-red-500 focus:ring-red-300 border-gray-300 rounded cursor-not-allowed" :
+                             "h-4 w-4 text-gray-400 focus:ring-gray-300 border-gray-300 rounded cursor-not-allowed opacity-60"}
                 />
                 <label 
                   htmlFor={`${project.id}-${milestone.id}`}
-                  className={`ml-2 text-sm ${milestone.completed ? 'line-through text-gray-500 dark:text-gray-400' : 'text-gray-700 dark:text-gray-300'}`}
+                  className={`ml-2 text-sm ${milestone.completed ? 'line-through text-red-600 dark:text-red-400' : 'text-gray-700 dark:text-gray-300'}`}
                 >
                   {milestone.name}
                 </label>
