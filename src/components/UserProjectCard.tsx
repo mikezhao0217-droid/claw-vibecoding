@@ -9,6 +9,8 @@ interface UserProjectCardProps {
   onProjectUpdate: (updatedProject: UserProject) => void;
   onProjectDelete: (projectId: string) => void;
   isEditing: boolean;
+  departments?: Array<{ id: string; name: string }>;
+  teams?: Array<{ id: string; name: string; department_id: string }> | import('@/types/project').Team[];
 }
 
 const UserProjectCard: React.FC<UserProjectCardProps> = ({ 
@@ -16,7 +18,9 @@ const UserProjectCard: React.FC<UserProjectCardProps> = ({
   onToggleMilestone, 
   onProjectUpdate,
   onProjectDelete,
-  isEditing 
+  isEditing,
+  departments = [],
+  teams = []
 }) => {
   const [isEditingLocal, setIsEditingLocal] = useState(false);
   const [editForm, setEditForm] = useState({
@@ -94,19 +98,24 @@ const UserProjectCard: React.FC<UserProjectCardProps> = ({
                   onClick={() => setIsEditingLocal(true)}
                   className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
                 >
-                  {project.department}
+                  {departments.find(d => d.id === project.department)?.name || project.department}
                 </button>
               ) : isEditingLocal ? (
-                <input
-                  type="text"
+                <select
                   value={editForm.department}
                   onChange={(e) => setEditForm({...editForm, department: e.target.value})}
                   className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 border"
                   onBlur={handleSave}
-                />
+                >
+                  {departments.map(dept => (
+                    <option key={dept.id} value={dept.id}>
+                      {dept.name}
+                    </option>
+                  ))}
+                </select>
               ) : (
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
-                  {project.department}
+                  {departments.find(d => d.id === project.department)?.name || project.department}
                 </span>
               )}
               
@@ -115,19 +124,34 @@ const UserProjectCard: React.FC<UserProjectCardProps> = ({
                   onClick={() => setIsEditingLocal(true)}
                   className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100"
                 >
-                  {project.team}
+                  {(() => {
+                    const team = teams.find(t => t.id === project.team);
+                    return team ? (typeof team.name !== 'undefined' ? team.name : project.team) : project.team;
+                  })()}
                 </button>
               ) : isEditingLocal ? (
-                <input
-                  type="text"
+                <select
                   value={editForm.team}
                   onChange={(e) => setEditForm({...editForm, team: e.target.value})}
                   className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100 border"
                   onBlur={handleSave}
-                />
+                >
+                  {teams.map(team => {
+                    // Handle both formats: API format (department_id) and TypeScript interface format (departmentId)
+                    const departmentId = 'department_id' in team ? team.department_id : (team as any).departmentId;
+                    return (
+                      <option key={team.id} value={team.id}>
+                        {team.name} ({departments.find(d => d.id === departmentId)?.name || departmentId})
+                      </option>
+                    );
+                  })}
+                </select>
               ) : (
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100">
-                  {project.team}
+                  {(() => {
+                    const team = teams.find(t => t.id === project.team);
+                    return team ? (typeof team.name !== 'undefined' ? team.name : project.team) : project.team;
+                  })()}
                 </span>
               )}
             </div>

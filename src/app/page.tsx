@@ -185,6 +185,13 @@ export default function Home() {
     <div className="min-h-screen bg-zinc-50 dark:bg-black font-sans py-12">
       <div className="container mx-auto px-4">
         <header className="mb-12 text-center">
+          {isEditing && (
+            <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+              <p className="text-sm text-blue-800 dark:text-blue-200">
+                最后更新时间: {new Date().toLocaleString('zh-CN')}
+              </p>
+            </div>
+          )}
           <div className="flex justify-between items-center mb-4">
             {isEditing && editingConfig ? (
               <input
@@ -304,6 +311,8 @@ export default function Home() {
                   onProjectUpdate={handleProjectUpdate}
                   onProjectDelete={handleProjectDelete}
                   isEditing={isEditing}
+                  departments={data.departments}
+                  teams={data.teams}
                 />
               ))}
             </div>
