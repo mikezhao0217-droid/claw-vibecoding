@@ -81,11 +81,7 @@ export default function Home() {
       owner: '新负责人',
       department: defaultDepartment,
       team: defaultTeam,
-      milestones: [
-        { id: 'planning', name: '项目规划', completed: false },
-        { id: 'development', name: '开发阶段', completed: false },
-        { id: 'testing', name: '测试阶段', completed: false }
-      ],
+      milestones: [], // Start with empty milestones
       userId: currentUser
     };
     
