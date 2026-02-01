@@ -36,6 +36,38 @@ const UserProjectCard: React.FC<UserProjectCardProps> = ({
   const totalCount = project.milestones.length;
   const progressPercentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
+  // Helper function to handle toggling with default milestones
+  const onToggleMilestoneWithDefaults = (milestone: any) => {
+    // Check if this milestone already exists in the project
+    const existingMilestoneIndex = project.milestones.findIndex((m: any) => m.name === milestone.name);
+    
+    if (existingMilestoneIndex !== -1) {
+      // Milestone exists in project, toggle its completion status
+      onToggleMilestone(project.id, project.milestones[existingMilestoneIndex].id, project.userId);
+    } else {
+      // Milestone doesn't exist in project, add it first with the correct completion status
+      const newMilestone = {
+        id: `proj-${project.id}-ms-${Date.now()}`, // Generate a unique ID for this project's milestone
+        name: milestone.name,
+        completed: !milestone.completed // Toggle the status
+      };
+      
+      // Create updated project with the new milestone
+      const updatedProject = {
+        ...project,
+        milestones: [...project.milestones, newMilestone]
+      };
+      
+      // Update the project
+      onProjectUpdate(updatedProject);
+      
+      // Then toggle the milestone
+      setTimeout(() => {
+        onToggleMilestone(project.id, newMilestone.id, project.userId);
+      }, 0);
+    }
+  };
+
   const handleSave = () => {
     const updatedProject = {
       ...project,
@@ -206,7 +238,7 @@ const UserProjectCard: React.FC<UserProjectCardProps> = ({
                 <input
                   type="checkbox"
                   checked={milestone.completed}
-                  onChange={() => isEditing && onToggleMilestone(project.id, milestone.id, project.userId)}
+                  onChange={() => isEditing && onToggleMilestoneWithDefaults(milestone)}
                   disabled={!isEditing}
                   className={isEditing ? "h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" : "h-4 w-4 text-blue-400 focus:ring-blue-300 border-gray-300 rounded cursor-not-allowed opacity-60"}
                 />
