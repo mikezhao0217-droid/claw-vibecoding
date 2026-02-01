@@ -152,10 +152,34 @@ export default function Home() {
       .sort((a, b) => b.progressPercentage - a.progressPercentage) || []; // Sort by progress (descending)
   }
 
-  // Calculate overall company progress
-  const allMilestones = data.userProjects.flatMap(project => project.milestones);
-  const totalMilestones = allMilestones.length;
-  const completedMilestones = allMilestones.filter(m => m.completed).length;
+  // Calculate overall company progress based only on default milestones
+  const defaultMilestones = data?.config?.defaultMilestones || [];
+  let totalMilestones = 0;
+  let completedMilestones = 0;
+  
+  if (defaultMilestones.length > 0) {
+    // Count only milestones that match the default milestones
+    data.userProjects.forEach(project => {
+      defaultMilestones.forEach(dm => {
+        const projectMilestone = project.milestones.find(pm => pm.name === dm.name);
+        if (projectMilestone) {
+          totalMilestones++;
+          if (projectMilestone.completed) {
+            completedMilestones++;
+          }
+        } else {
+          // If the default milestone doesn't exist in the project, count it as incomplete
+          totalMilestones++;
+        }
+      });
+    });
+  } else {
+    // Fallback to original logic if no default milestones
+    const allMilestones = data.userProjects.flatMap(project => project.milestones);
+    totalMilestones = allMilestones.length;
+    completedMilestones = allMilestones.filter(m => m.completed).length;
+  }
+  
   const overallProgress = totalMilestones > 0 ? Math.round((completedMilestones / totalMilestones) * 100) : 0;
 
   // Calculate department progress - only for non-deleted departments
@@ -163,9 +187,34 @@ export default function Home() {
     .filter(dept => !dept.deleted) // Filter out deleted departments
     .map(dept => {
       const deptProjects = data.userProjects.filter(p => p.department === dept.id);
-      const deptMilestones = deptProjects.flatMap(p => p.milestones);
-      const totalDeptMilestones = deptMilestones.length;
-      const completedDeptMilestones = deptMilestones.filter(m => m.completed).length;
+      const defaultMilestones = data?.config?.defaultMilestones || [];
+      
+      let totalDeptMilestones = 0;
+      let completedDeptMilestones = 0;
+      
+      if (defaultMilestones.length > 0) {
+        // Count only default milestones for this department
+        deptProjects.forEach(project => {
+          defaultMilestones.forEach(dm => {
+            const projectMilestone = project.milestones.find(pm => pm.name === dm.name);
+            if (projectMilestone) {
+              totalDeptMilestones++;
+              if (projectMilestone.completed) {
+                completedDeptMilestones++;
+              }
+            } else {
+              // If the default milestone doesn't exist in the project, count it as incomplete
+              totalDeptMilestones++;
+            }
+          });
+        });
+      } else {
+        // Fallback to original logic if no default milestones
+        const deptMilestones = deptProjects.flatMap(p => p.milestones);
+        totalDeptMilestones = deptMilestones.length;
+        completedDeptMilestones = deptMilestones.filter(m => m.completed).length;
+      }
+      
       const deptProgress = totalDeptMilestones > 0 ? Math.round((completedDeptMilestones / totalDeptMilestones) * 100) : 0;
       
       // Get unique members in this department
@@ -187,9 +236,34 @@ export default function Home() {
     .filter(team => !team.deleted) // Filter out deleted teams
     .map(team => {
       const teamProjects = data.userProjects.filter(p => p.team === team.id);
-      const teamMilestones = teamProjects.flatMap(p => p.milestones);
-      const totalTeamMilestones = teamMilestones.length;
-      const completedTeamMilestones = teamMilestones.filter(m => m.completed).length;
+      const defaultMilestones = data?.config?.defaultMilestones || [];
+      
+      let totalTeamMilestones = 0;
+      let completedTeamMilestones = 0;
+      
+      if (defaultMilestones.length > 0) {
+        // Count only default milestones for this team
+        teamProjects.forEach(project => {
+          defaultMilestones.forEach(dm => {
+            const projectMilestone = project.milestones.find(pm => pm.name === dm.name);
+            if (projectMilestone) {
+              totalTeamMilestones++;
+              if (projectMilestone.completed) {
+                completedTeamMilestones++;
+              }
+            } else {
+              // If the default milestone doesn't exist in the project, count it as incomplete
+              totalTeamMilestones++;
+            }
+          });
+        });
+      } else {
+        // Fallback to original logic if no default milestones
+        const teamMilestones = teamProjects.flatMap(p => p.milestones);
+        totalTeamMilestones = teamMilestones.length;
+        completedTeamMilestones = teamMilestones.filter(m => m.completed).length;
+      }
+      
       const teamProgress = totalTeamMilestones > 0 ? Math.round((completedTeamMilestones / totalTeamMilestones) * 100) : 0;
       
       // Get unique members in this team
