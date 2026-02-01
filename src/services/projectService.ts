@@ -832,6 +832,7 @@ export const fetchPageConfig = async () => {
       companyProgressTitle: '公司整体进度',
       departmentProgressTitle: '部门进度排行榜',
       teamProgressTitle: '小组进度排行榜',
+      defaultMilestones: [], // Default empty array
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -854,6 +855,7 @@ export const fetchPageConfig = async () => {
           company_progress_title: '公司整体进度',
           department_progress_title: '部门进度排行榜',
           team_progress_title: '小组进度排行榜',
+          default_milestones: [], // Default empty array
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         };
@@ -874,6 +876,7 @@ export const fetchPageConfig = async () => {
           companyProgressTitle: defaultConfig.company_progress_title,
           departmentProgressTitle: defaultConfig.department_progress_title,
           teamProgressTitle: defaultConfig.team_progress_title,
+          defaultMilestones: defaultConfig.default_milestones || [],
           createdAt: defaultConfig.created_at,
           updatedAt: defaultConfig.updated_at
         };
@@ -890,6 +893,7 @@ export const fetchPageConfig = async () => {
       companyProgressTitle: data.company_progress_title,
       departmentProgressTitle: data.department_progress_title,
       teamProgressTitle: data.team_progress_title,
+      defaultMilestones: data.default_milestones || [], // Include default milestones
       createdAt: data.created_at,
       updatedAt: data.updated_at
     };
@@ -914,6 +918,7 @@ export const updatePageConfig = async (config: any) => {
         company_progress_title: config.companyProgressTitle,
         department_progress_title: config.departmentProgressTitle,
         team_progress_title: config.teamProgressTitle,
+        default_milestones: config.defaultMilestones || [], // Include default milestones
         updated_at: new Date().toISOString()
       })
       .eq('id', config.id || 'main');

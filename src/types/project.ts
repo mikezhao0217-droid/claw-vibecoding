@@ -48,6 +48,7 @@ export interface PageConfig {
   teamProgressTitle: string;       // 小组进度标题
   createdAt: string;
   updatedAt: string;
+  defaultMilestones?: Milestone[]; // 默认里程碑列表
 }
 
 export interface ProjectData {

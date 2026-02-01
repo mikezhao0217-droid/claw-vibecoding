@@ -11,6 +11,7 @@ interface UserProjectCardProps {
   isEditing: boolean;
   departments?: Array<{ id: string; name: string }>;
   teams?: Array<{ id: string; name: string; department_id: string }> | import('@/types/project').Team[];
+  defaultMilestones?: Array<{ id: string; name: string; completed: boolean }>;
 }
 
 const UserProjectCard: React.FC<UserProjectCardProps> = ({ 
@@ -20,7 +21,8 @@ const UserProjectCard: React.FC<UserProjectCardProps> = ({
   onProjectDelete,
   isEditing,
   departments = [],
-  teams = []
+  teams = [],
+  defaultMilestones
 }) => {
   const [isEditingLocal, setIsEditingLocal] = useState(false);
   const [editForm, setEditForm] = useState({
@@ -182,23 +184,41 @@ const UserProjectCard: React.FC<UserProjectCardProps> = ({
         {/* Milestones */}
         <div className="space-y-2">
           <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">里程碑:</h4>
-          {project.milestones.map((milestone) => (
-            <div key={milestone.id} className="flex items-center">
-              <input
-                type="checkbox"
-                checked={milestone.completed}
-                onChange={() => isEditing && onToggleMilestone(project.id, milestone.id, project.userId)}
-                disabled={!isEditing}
-                className={isEditing ? "h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" : "h-4 w-4 text-blue-400 focus:ring-blue-300 border-gray-300 rounded cursor-not-allowed opacity-60"}
-              />
-              <label 
-                htmlFor={`${project.id}-${milestone.id}`}
-                className={`ml-2 text-sm ${milestone.completed ? 'line-through text-gray-500 dark:text-gray-400' : 'text-gray-700 dark:text-gray-300'}`}
-              >
-                {milestone.name}
-              </label>
-            </div>
-          ))}
+          {(() => {
+            // Determine which milestones to display
+            let milestonesToDisplay = project.milestones;
+            
+            if (defaultMilestones && defaultMilestones.length > 0) {
+              // If we have default milestones, map them to the project's state
+              milestonesToDisplay = defaultMilestones.map(dm => {
+                // Check if this default milestone exists in the project and is completed
+                const projectMilestone = project.milestones.find(pm => pm.name === dm.name);
+                return {
+                  ...dm,
+                  completed: projectMilestone ? projectMilestone.completed : false,
+                  id: projectMilestone ? projectMilestone.id : dm.id
+                };
+              });
+            }
+            
+            return milestonesToDisplay.map((milestone) => (
+              <div key={milestone.id} className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={milestone.completed}
+                  onChange={() => isEditing && onToggleMilestone(project.id, milestone.id, project.userId)}
+                  disabled={!isEditing}
+                  className={isEditing ? "h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" : "h-4 w-4 text-blue-400 focus:ring-blue-300 border-gray-300 rounded cursor-not-allowed opacity-60"}
+                />
+                <label 
+                  htmlFor={`${project.id}-${milestone.id}`}
+                  className={`ml-2 text-sm ${milestone.completed ? 'line-through text-gray-500 dark:text-gray-400' : 'text-gray-700 dark:text-gray-300'}`}
+                >
+                  {milestone.name}
+                </label>
+              </div>
+            ));
+          })()}
         </div>
       </div>
     </div>

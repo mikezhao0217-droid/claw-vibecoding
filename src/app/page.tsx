@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import UserProjectCard from '@/components/UserProjectCard';
 import GroupProgressCard from '@/components/GroupProgressCard';
 import DepartmentTeamManager from '@/components/DepartmentTeamManager';
+import DefaultMilestonesEditor from '@/components/DefaultMilestonesEditor';
 import { useProjectData } from '@/hooks/useProjectData';
 import { initializeDatabase } from '@/services/projectService';
 
@@ -322,6 +323,21 @@ export default function Home() {
             </section>
           )}
 
+          {/* Default Milestones Editor Section */}
+          {isEditing && config && (
+            <section className="mb-16">
+              <DefaultMilestonesEditor
+                defaultMilestones={config.defaultMilestones || []}
+                onUpdate={(milestones) => {
+                  if (config) {
+                    updatePageConfig({ ...config, defaultMilestones: milestones });
+                  }
+                }}
+                isEditing={isEditing}
+              />
+            </section>
+          )}
+
           {/* Personal Projects Section - Ranked by completion */}
           <section className="mb-16">
             <div className="flex justify-between items-center mb-6">
@@ -350,6 +366,7 @@ export default function Home() {
                   isEditing={isEditing}
                   departments={data.departments}
                   teams={data.teams}
+                  defaultMilestones={config?.defaultMilestones}
                 />
               ))}
             </div>
