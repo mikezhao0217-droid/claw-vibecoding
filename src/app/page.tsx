@@ -1,13 +1,23 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import UserProjectCard from '@/components/UserProjectCard';
 import GroupProgressCard from '@/components/GroupProgressCard';
 import { useProjectData } from '@/hooks/useProjectData';
+import { initializeDatabase } from '@/services/projectService';
 
 export default function Home() {
   const { data, loading, toggleMilestoneCompletion, addProject, updateSingleProject, deleteProject } = useProjectData();
   const [currentUser] = useState("current-user"); // In a real app, this would come from authentication
+  
+  // Initialize database on component mount
+  useEffect(() => {
+    const initDb = async () => {
+      await initializeDatabase();
+    };
+    
+    initDb();
+  }, []);
   const [isEditing, setIsEditing] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
