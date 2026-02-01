@@ -29,12 +29,10 @@ const DepartmentTeamManager: React.FC<DepartmentTeamManagerProps> = ({
   const [editingDeptId, setEditingDeptId] = useState<string | null>(null);
   const [editingDeptName, setEditingDeptName] = useState('');
   const [newDeptName, setNewDeptName] = useState('');
-  const [newDeptId, setNewDeptId] = useState('');
   
   const [editingTeamId, setEditingTeamId] = useState<string | null>(null);
   const [editingTeamName, setEditingTeamName] = useState('');
   const [newTeamName, setNewTeamName] = useState('');
-  const [newTeamId, setNewTeamId] = useState('');
 
   // Cancel editing department
   const cancelDeptEdit = () => {
@@ -63,16 +61,41 @@ const DepartmentTeamManager: React.FC<DepartmentTeamManagerProps> = ({
     }
   };
 
+  // Generate a unique ID from the name
+  const generateIdFromName = (name: string, existingItems: Array<{id: string, name: string}>) => {
+    let baseId = name.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (!baseId) return '';
+    
+    let uniqueId = baseId;
+    let counter = 1;
+    
+    // Check if the generated ID already exists
+    while (existingItems.some(item => item.id === uniqueId)) {
+      uniqueId = `${baseId}${counter}`;
+      counter++;
+    }
+    
+    return uniqueId;
+  };
+
   // Add new department
   const addNewDepartment = async () => {
-    if (!newDeptId.trim() || !newDeptName.trim()) return;
+    if (!newDeptName.trim()) return;
     
-    const newDept = { id: newDeptId.trim(), name: newDeptName.trim() };
+    // Generate a unique ID based on the name
+    const newId = generateIdFromName(newDeptName, departments);
+    if (!newId) {
+      alert('请输入有效的部门名称');
+      return;
+    }
+    
+    const newDept = { id: newId, name: newDeptName.trim() };
     const success = await addDepartmentService(newDept);
     if (success) {
       onDepartmentsUpdate([...departments, { ...newDept, deleted: false }]);
-      setNewDeptId('');
       setNewDeptName('');
+    } else {
+      alert('添加部门失败，请检查部门名称是否已存在');
     }
   };
 
@@ -117,14 +140,22 @@ const DepartmentTeamManager: React.FC<DepartmentTeamManagerProps> = ({
 
   // Add new team
   const addNewTeam = async () => {
-    if (!newTeamId.trim() || !newTeamName.trim()) return;
+    if (!newTeamName.trim()) return;
     
-    const newTeam = { id: newTeamId.trim(), name: newTeamName.trim() };
+    // Generate a unique ID based on the name
+    const newId = generateIdFromName(newTeamName, teams);
+    if (!newId) {
+      alert('请输入有效的团队名称');
+      return;
+    }
+    
+    const newTeam = { id: newId, name: newTeamName.trim() };
     const success = await addTeamService(newTeam);
     if (success) {
       onTeamsUpdate([...teams, { ...newTeam, deleted: false }]);
-      setNewTeamId('');
       setNewTeamName('');
+    } else {
+      alert('添加团队失败，请检查团队名称是否已存在');
     }
   };
 
@@ -160,13 +191,6 @@ const DepartmentTeamManager: React.FC<DepartmentTeamManagerProps> = ({
             <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
               <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">添加新部门</h5>
               <div className="flex flex-col space-y-2">
-                <input
-                  type="text"
-                  value={newDeptId}
-                  onChange={(e) => setNewDeptId(e.target.value)}
-                  placeholder="部门ID"
-                  className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
-                />
                 <input
                   type="text"
                   value={newDeptName}
@@ -253,13 +277,6 @@ const DepartmentTeamManager: React.FC<DepartmentTeamManagerProps> = ({
             <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
               <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">添加新团队</h5>
               <div className="flex flex-col space-y-2">
-                <input
-                  type="text"
-                  value={newTeamId}
-                  onChange={(e) => setNewTeamId(e.target.value)}
-                  placeholder="团队ID"
-                  className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-600 text-gray-900 dark:text-white"
-                />
                 <input
                   type="text"
                   value={newTeamName}
