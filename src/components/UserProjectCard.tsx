@@ -107,7 +107,7 @@ const UserProjectCard: React.FC<UserProjectCardProps> = ({
                   className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 border"
                   onBlur={handleSave}
                 >
-                  {departments.map(dept => (
+                  {(departments as any[]).filter(dept => !dept.deleted).map(dept => (
                     <option key={dept.id} value={dept.id}>
                       {dept.name}
                     </option>
@@ -136,7 +136,7 @@ const UserProjectCard: React.FC<UserProjectCardProps> = ({
                   className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100 border"
                   onBlur={handleSave}
                 >
-                  {teams.map(team => {
+                  {(teams as any[]).filter(team => !team.deleted).map(team => {
                     // Handle both formats: API format (department_id) and TypeScript interface format (departmentId)
                     const departmentId = 'department_id' in team ? team.department_id : (team as any).departmentId;
                     return (

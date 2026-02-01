@@ -63,7 +63,8 @@ const DepartmentTeamManager: React.FC<DepartmentTeamManagerProps> = ({
 
   // Generate a unique ID from the name
   const generateIdFromName = (name: string, existingItems: Array<{id: string, name: string}>) => {
-    let baseId = name.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+    // Convert to lowercase and replace non-alphanumeric characters with hyphens
+    let baseId = name.trim().toLowerCase().replace(/[^a-z0-9\u4e00-\u9fa5]/g, '-');
     if (!baseId) return '';
     
     let uniqueId = baseId;
@@ -71,7 +72,7 @@ const DepartmentTeamManager: React.FC<DepartmentTeamManagerProps> = ({
     
     // Check if the generated ID already exists
     while (existingItems.some(item => item.id === uniqueId)) {
-      uniqueId = `${baseId}${counter}`;
+      uniqueId = `${baseId}-${counter}`;
       counter++;
     }
     
