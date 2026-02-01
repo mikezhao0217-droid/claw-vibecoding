@@ -3,11 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import UserProjectCard from '@/components/UserProjectCard';
 import GroupProgressCard from '@/components/GroupProgressCard';
+import DepartmentTeamManager from '@/components/DepartmentTeamManager';
 import { useProjectData } from '@/hooks/useProjectData';
 import { initializeDatabase } from '@/services/projectService';
 
 export default function Home() {
-  const { data, config, loading, toggleMilestoneCompletion, addProject, updateSingleProject, deleteProject, updatePageConfig } = useProjectData();
+  const { data, config, loading, toggleMilestoneCompletion, addProject, updateSingleProject, deleteProject, updatePageConfig, updateDepartments, updateTeams } = useProjectData();
   const [currentUser] = useState("current-user"); // All users see all projects
   const [isEditing, setIsEditing] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -298,6 +299,19 @@ export default function Home() {
         </header>
 
         <main>
+          {/* Department and Team Management Section */}
+          {isEditing && data && (
+            <section className="mb-16">
+              <DepartmentTeamManager
+                departments={data.departments}
+                teams={data.teams}
+                onDepartmentsUpdate={updateDepartments}
+                onTeamsUpdate={updateTeams}
+                isEditing={isEditing}
+              />
+            </section>
+          )}
+
           {/* Personal Projects Section - Ranked by completion */}
           <section className="mb-16">
             <div className="flex justify-between items-center mb-6">

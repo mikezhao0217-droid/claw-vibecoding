@@ -20,13 +20,14 @@ export interface UserProject {
 export interface Department {
   id: string;
   name: string;
+  deleted?: boolean;
 }
 
 // 小组信息
 export interface Team {
   id: string;
   name: string;
-  departmentId: string; // 所属部门
+  deleted?: boolean;
 }
 
 // 用于分组统计的数据结构

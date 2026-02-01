@@ -225,6 +225,55 @@ export const useProjectData = () => {
     }
   };
 
+  // Department and team management functions
+  const updateDepartments = async (updatedDepartments: any[]) => {
+    try {
+      setData(prevData => {
+        if (!prevData) return prevData;
+        
+        return {
+          ...prevData,
+          departments: updatedDepartments
+        };
+      });
+
+      // Then update in Supabase
+      if (data) {
+        const updatedData = { ...data, departments: updatedDepartments };
+        await updateProjectData(updatedData);
+      }
+    } catch (error) {
+      console.error('Error updating departments:', error);
+      // Revert the optimistic update in case of network error
+      const revertedData = await fetchProjectData();
+      setData(revertedData);
+    }
+  };
+
+  const updateTeams = async (updatedTeams: any[]) => {
+    try {
+      setData(prevData => {
+        if (!prevData) return prevData;
+        
+        return {
+          ...prevData,
+          teams: updatedTeams
+        };
+      });
+
+      // Then update in Supabase
+      if (data) {
+        const updatedData = { ...data, teams: updatedTeams };
+        await updateProjectData(updatedData);
+      }
+    } catch (error) {
+      console.error('Error updating teams:', error);
+      // Revert the optimistic update in case of network error
+      const revertedData = await fetchProjectData();
+      setData(revertedData);
+    }
+  };
+
   return {
     data,
     config,
@@ -234,6 +283,8 @@ export const useProjectData = () => {
     addProject,
     updateSingleProject,
     deleteProject,
-    updatePageConfig
+    updatePageConfig,
+    updateDepartments,
+    updateTeams
   };
 };

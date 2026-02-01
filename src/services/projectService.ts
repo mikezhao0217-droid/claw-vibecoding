@@ -28,21 +28,21 @@ export const initializeDatabase = async () => {
     if (!data || data.length === 0) {
       // Insert default departments
       const departments = [
-        { id: "engineering", name: "工程部" },
-        { id: "marketing", name: "市场部" },
-        { id: "sales", name: "销售部" },
-        { id: "hr", name: "人事部" }
+        { id: "engineering", name: "工程部", deleted: false },
+        { id: "marketing", name: "市场部", deleted: false },
+        { id: "sales", name: "销售部", deleted: false },
+        { id: "hr", name: "人事部", deleted: false }
       ];
       
       await supabase.from(DEPARTMENTS_TABLE).insert(departments);
       
       // Insert default teams
       const teams = [
-        { id: "frontend", name: "前端组", department_id: "engineering" },
-        { id: "backend", name: "后端组", department_id: "engineering" },
-        { id: "mobile", name: "移动端组", department_id: "engineering" },
-        { id: "content", name: "内容组", department_id: "marketing" },
-        { id: "creative", name: "创意组", department_id: "marketing" }
+        { id: "frontend", name: "前端组", deleted: false },
+        { id: "backend", name: "后端组", deleted: false },
+        { id: "mobile", name: "移动端组", deleted: false },
+        { id: "content", name: "内容组", deleted: false },
+        { id: "creative", name: "创意组", deleted: false }
       ];
       
       await supabase.from(TEAMS_TABLE).insert(teams);
@@ -163,11 +163,10 @@ export const fetchProjectData = async (): Promise<ProjectData | null> => {
       return null;
     }
 
-    // Normalize team data to match our type structure
+    // Normalize team data to match our type structure (no department_id anymore)
     const normalizedTeams = teams.map(team => ({
       id: team.id,
-      name: team.name,
-      departmentId: team.department_id
+      name: team.name
     }));
 
     // Fetch user projects (excluding those marked as deleted)
@@ -219,7 +218,8 @@ export const updateProjectData = async (updatedData: ProjectData): Promise<boole
       await supabase.from(DEPARTMENTS_TABLE).insert(
         updatedData.departments.map(dept => ({
           id: dept.id,
-          name: dept.name
+          name: dept.name,
+          deleted: dept.deleted || false
         }))
       );
     }
@@ -232,7 +232,7 @@ export const updateProjectData = async (updatedData: ProjectData): Promise<boole
         updatedData.teams.map(team => ({
           id: team.id,
           name: team.name,
-          department_id: team.departmentId
+          deleted: team.deleted || false
         }))
       );
     }
@@ -319,10 +319,11 @@ export const addProject = async (project: UserProject): Promise<boolean> => {
         .from(DEPARTMENTS_TABLE)
         .select('id')
         .eq('id', project.department)
+        .eq('deleted', false) // Only consider non-deleted departments
         .single();
 
       if (deptError || !deptData) {
-        console.warn(`Department with ID ${project.department} does not exist, using default`);
+        console.warn(`Department with ID ${project.department} does not exist or is deleted, using default`);
         project.department = 'engineering'; // Default to engineering
       }
     } else {
@@ -334,10 +335,11 @@ export const addProject = async (project: UserProject): Promise<boolean> => {
         .from(TEAMS_TABLE)
         .select('id')
         .eq('id', project.team)
+        .eq('deleted', false) // Only consider non-deleted teams
         .single();
 
       if (teamError || !teamData) {
-        console.warn(`Team with ID ${project.team} does not exist, using default`);
+        console.warn(`Team with ID ${project.team} does not exist or is deleted, using default`);
         project.team = 'frontend'; // Default to frontend
       }
     } else {
@@ -380,16 +382,17 @@ export const updateProject = async (project: UserProject): Promise<boolean> => {
   }
 
   try {
-    // First verify that the referenced department and team exist
+    // First verify that the referenced department and team exist and are not deleted
     if (project.department) {
       const { data: deptData, error: deptError } = await supabase
         .from(DEPARTMENTS_TABLE)
         .select('id')
         .eq('id', project.department)
+        .eq('deleted', false) // Only consider non-deleted departments
         .single();
 
       if (deptError || !deptData) {
-        console.error(`Department with ID ${project.department} does not exist:`, deptError);
+        console.error(`Department with ID ${project.department} does not exist or is deleted:`, deptError);
         // Use a default department if the specified one doesn't exist
         project.department = 'engineering'; // Default to engineering
       }
@@ -400,10 +403,11 @@ export const updateProject = async (project: UserProject): Promise<boolean> => {
         .from(TEAMS_TABLE)
         .select('id')
         .eq('id', project.team)
+        .eq('deleted', false) // Only consider non-deleted teams
         .single();
 
       if (teamError || !teamData) {
-        console.error(`Team with ID ${project.team} does not exist:`, teamError);
+        console.error(`Team with ID ${project.team} does not exist or is deleted:`, teamError);
         // Use a default team if the specified one doesn't exist
         project.team = 'frontend'; // Default to frontend
       }
@@ -580,6 +584,168 @@ export const getDepartmentProgress = async (): Promise<any[]> => {
   } catch (error) {
     console.error('Error calculating department progress:', error);
     return [];
+  }
+};
+
+// Add a new department to the database
+export const addDepartment = async (department: { id: string; name: string }): Promise<boolean> => {
+  if (!supabase) {
+    console.warn('Supabase not configured, skipping department addition');
+    return false;
+  }
+
+  try {
+    const { error } = await supabase
+      .from(DEPARTMENTS_TABLE)
+      .insert([{
+        id: department.id,
+        name: department.name,
+        deleted: false
+      }]);
+
+    if (error) {
+      console.error('Error adding department:', error);
+      return false;
+    }
+
+    console.log(`Successfully added department: ${department.name} (${department.id})`);
+    return true;
+  } catch (error) {
+    console.error('Unexpected error adding department:', error);
+    return false;
+  }
+};
+
+// Update a specific department in the database
+export const updateDepartment = async (id: string, name: string): Promise<boolean> => {
+  if (!supabase) {
+    console.warn('Supabase not configured, skipping department update');
+    return false;
+  }
+
+  try {
+    const { error } = await supabase
+      .from(DEPARTMENTS_TABLE)
+      .update({ name })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error updating department:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Unexpected error updating department:', error);
+    return false;
+  }
+};
+
+// Delete a department from the database (soft delete using deleted flag)
+export const deleteDepartment = async (id: string): Promise<boolean> => {
+  if (!supabase) {
+    console.warn('Supabase not configured, skipping department deletion');
+    return false;
+  }
+
+  try {
+    // Instead of physically deleting the record, set the deleted flag to true
+    const { error } = await supabase
+      .from(DEPARTMENTS_TABLE)
+      .update({ deleted: true })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error marking department as deleted:', error);
+      return false;
+    }
+
+    console.log(`Successfully marked department as deleted: ${id}`);
+    return true;
+  } catch (error) {
+    console.error('Unexpected error marking department as deleted:', error);
+    return false;
+  }
+};
+
+// Add a new team to the database
+export const addTeam = async (team: { id: string; name: string }): Promise<boolean> => {
+  if (!supabase) {
+    console.warn('Supabase not configured, skipping team addition');
+    return false;
+  }
+
+  try {
+    const { error } = await supabase
+      .from(TEAMS_TABLE)
+      .insert([{
+        id: team.id,
+        name: team.name,
+        deleted: false
+      }]);
+
+    if (error) {
+      console.error('Error adding team:', error);
+      return false;
+    }
+
+    console.log(`Successfully added team: ${team.name} (${team.id})`);
+    return true;
+  } catch (error) {
+    console.error('Unexpected error adding team:', error);
+    return false;
+  }
+};
+
+// Update a specific team in the database
+export const updateTeam = async (id: string, name: string): Promise<boolean> => {
+  if (!supabase) {
+    console.warn('Supabase not configured, skipping team update');
+    return false;
+  }
+
+  try {
+    const { error } = await supabase
+      .from(TEAMS_TABLE)
+      .update({ name })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error updating team:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Unexpected error updating team:', error);
+    return false;
+  }
+};
+
+// Delete a team from the database (soft delete using deleted flag)
+export const deleteTeam = async (id: string): Promise<boolean> => {
+  if (!supabase) {
+    console.warn('Supabase not configured, skipping team deletion');
+    return false;
+  }
+
+  try {
+    // Instead of physically deleting the record, set the deleted flag to true
+    const { error } = await supabase
+      .from(TEAMS_TABLE)
+      .update({ deleted: true })
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error marking team as deleted:', error);
+      return false;
+    }
+
+    console.log(`Successfully marked team as deleted: ${id}`);
+    return true;
+  } catch (error) {
+    console.error('Unexpected error marking team as deleted:', error);
+    return false;
   }
 };
 
