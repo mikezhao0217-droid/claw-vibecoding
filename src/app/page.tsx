@@ -77,7 +77,7 @@ export default function Home() {
     const defaultTeam = validTeams.length > 0 ? validTeams[0] : 'frontend';
     
     // Get default milestones and set them as unchecked for new project
-    const defaultMilestones = data?.config?.defaultMilestones ?? [];
+    const defaultMilestones = config?.defaultMilestones ?? [];
     const newProjectMilestones = Array.isArray(defaultMilestones) 
       ? defaultMilestones.map(dm => ({
           ...dm,
@@ -159,15 +159,15 @@ export default function Home() {
   }
 
   // Calculate overall company progress based only on default milestones
-  const defaultMilestones = data?.config?.defaultMilestones || [];
+  const defaultMilestones = config?.defaultMilestones || [];
   let totalMilestones = 0;
   let completedMilestones = 0;
   
   if (defaultMilestones.length > 0) {
     // Count only milestones that match the default milestones
     data.userProjects.forEach(project => {
-      defaultMilestones.forEach(dm => {
-        const projectMilestone = project.milestones.find(pm => pm.name === dm.name);
+      defaultMilestones.forEach((dm: { id: string; name: string; completed: boolean }) => {
+        const projectMilestone = project.milestones.find((pm: any) => pm.name === dm.name);
         if (projectMilestone) {
           totalMilestones++;
           if (projectMilestone.completed) {
@@ -193,7 +193,7 @@ export default function Home() {
     .filter(dept => !dept.deleted) // Filter out deleted departments
     .map(dept => {
       const deptProjects = data.userProjects.filter(p => p.department === dept.id);
-      const defaultMilestones = data?.config?.defaultMilestones || [];
+      const defaultMilestones = config?.defaultMilestones || [];
       
       let totalDeptMilestones = 0;
       let completedDeptMilestones = 0;
@@ -201,8 +201,8 @@ export default function Home() {
       if (defaultMilestones.length > 0) {
         // Count only default milestones for this department
         deptProjects.forEach(project => {
-          defaultMilestones.forEach(dm => {
-            const projectMilestone = project.milestones.find(pm => pm.name === dm.name);
+          defaultMilestones.forEach((dm: { id: string; name: string; completed: boolean }) => {
+            const projectMilestone = project.milestones.find((pm: any) => pm.name === dm.name);
             if (projectMilestone) {
               totalDeptMilestones++;
               if (projectMilestone.completed) {
@@ -242,7 +242,7 @@ export default function Home() {
     .filter(team => !team.deleted) // Filter out deleted teams
     .map(team => {
       const teamProjects = data.userProjects.filter(p => p.team === team.id);
-      const defaultMilestones = data?.config?.defaultMilestones || [];
+      const defaultMilestones = config?.defaultMilestones || [];
       
       let totalTeamMilestones = 0;
       let completedTeamMilestones = 0;
@@ -250,8 +250,8 @@ export default function Home() {
       if (defaultMilestones.length > 0) {
         // Count only default milestones for this team
         teamProjects.forEach(project => {
-          defaultMilestones.forEach(dm => {
-            const projectMilestone = project.milestones.find(pm => pm.name === dm.name);
+          defaultMilestones.forEach((dm: { id: string; name: string; completed: boolean }) => {
+            const projectMilestone = project.milestones.find((pm: any) => pm.name === dm.name);
             if (projectMilestone) {
               totalTeamMilestones++;
               if (projectMilestone.completed) {
