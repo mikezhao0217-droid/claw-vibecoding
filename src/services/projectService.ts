@@ -273,7 +273,7 @@ export const toggleMilestoneCompletion = async (
     // Fetch the specific user's project
     const { data: projectData, error } = await supabase
       .from(USER_PROJECTS_TABLE)
-      .select('milestones')
+      .select('*') // Select all fields, not just milestones
       .eq('id', projectId)
       .eq('user_id', userId)
       .single();
@@ -291,7 +291,10 @@ export const toggleMilestoneCompletion = async (
     // Update the project in the database
     const { error: updateError } = await supabase
       .from(USER_PROJECTS_TABLE)
-      .update({ milestones: updatedMilestones })
+      .update({ 
+        milestones: updatedMilestones,
+        updated_at: new Date().toISOString()
+      })
       .eq('id', projectId)
       .eq('user_id', userId);
 
