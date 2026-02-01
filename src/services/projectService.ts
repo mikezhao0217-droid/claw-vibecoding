@@ -439,18 +439,60 @@ export const deleteProject = async (projectId: string): Promise<boolean> => {
   }
 
   try {
-    const { error } = await supabase
+    // First, let's check if the record exists
+    const { data: existingProject, error: fetchError } = await supabase
+      .from(USER_PROJECTS_TABLE)
+      .select('id')
+      .eq('id', projectId)
+      .single();
+
+    if (fetchError) {
+      console.error('Error fetching project to delete:', fetchError);
+      return false;
+    }
+
+    if (!existingProject) {
+      console.log(`Project with ID ${projectId} not found`);
+      return false;
+    }
+
+    // Attempt to delete the record
+    const { error, status } = await supabase
       .from(USER_PROJECTS_TABLE)
       .delete()
       .eq('id', projectId);
 
     if (error) {
       console.error('Error deleting project:', error);
+      console.log('Status code:', status);
+      // Log more details about the error
+      console.log('Error details:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint
+      });
       return false;
     }
 
-    console.log(`Successfully deleted project with ID: ${projectId}`);
-    return true;
+    // Verify the deletion by attempting to fetch the record again
+    const { data: verifyData, error: verifyError } = await supabase
+      .from(USER_PROJECTS_TABLE)
+      .select('id')
+      .eq('id', projectId)
+      .single();
+
+    if (verifyError && verifyError.code === 'PGRST116') {
+      // This is expected - means no rows returned
+      console.log(`Successfully verified deletion of project with ID: ${projectId}`);
+      return true;
+    } else if (verifyData) {
+      console.error(`Deletion verification failed - project ${projectId} still exists in database`);
+      return false;
+    } else {
+      console.log(`Project with ID ${projectId} was successfully deleted`);
+      return true;
+    }
   } catch (error) {
     console.error('Unexpected error deleting project:', error);
     return false;
