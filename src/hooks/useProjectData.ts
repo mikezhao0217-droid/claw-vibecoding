@@ -10,7 +10,9 @@ import {
   updateProject as updateProjectService,
   deleteProject as deleteProjectService,
   fetchPageConfig as fetchPageConfigService,
-  updatePageConfig as updatePageConfigService
+  updatePageConfig as updatePageConfigService,
+  updateDepartmentsOnly,
+  updateTeamsOnly
 } from '@/services/projectService';
 
 export const useProjectData = () => {
@@ -237,10 +239,14 @@ export const useProjectData = () => {
         };
       });
 
-      // Then update in Supabase
-      if (data) {
-        const updatedData = { ...data, departments: updatedDepartments };
-        await updateProjectData(updatedData);
+      // Then update in Supabase - only update departments, not the whole dataset
+      const success = await updateDepartmentsOnly(updatedDepartments);
+      
+      if (!success) {
+        // If the server update fails, revert the optimistic update
+        console.error('Failed to update departments in database');
+        const revertedData = await fetchProjectData();
+        setData(revertedData);
       }
     } catch (error) {
       console.error('Error updating departments:', error);
@@ -261,10 +267,14 @@ export const useProjectData = () => {
         };
       });
 
-      // Then update in Supabase
-      if (data) {
-        const updatedData = { ...data, teams: updatedTeams };
-        await updateProjectData(updatedData);
+      // Then update in Supabase - only update teams, not the whole dataset
+      const success = await updateTeamsOnly(updatedTeams);
+      
+      if (!success) {
+        // If the server update fails, revert the optimistic update
+        console.error('Failed to update teams in database');
+        const revertedData = await fetchProjectData();
+        setData(revertedData);
       }
     } catch (error) {
       console.error('Error updating teams:', error);

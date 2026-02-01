@@ -929,3 +929,54 @@ export const updatePageConfig = async (config: any) => {
     return false;
   }
 };
+// Update only departments
+export const updateDepartmentsOnly = async (departments: any[]): Promise<boolean> => {
+  if (!supabase) {
+    console.warn('Supabase not configured, skipping department update');
+    return false;
+  }
+
+  try {
+    if (departments && departments.length > 0) {
+      // Clear existing departments and insert new ones
+      await supabase.from(DEPARTMENTS_TABLE).delete().gt('id', '');
+      await supabase.from(DEPARTMENTS_TABLE).insert(
+        departments.map(dept => ({
+          id: dept.id,
+          name: dept.name,
+          deleted: dept.deleted || false
+        }))
+      );
+    }
+    return true;
+  } catch (error) {
+    console.error('Unexpected error updating departments only:', error);
+    return false;
+  }
+};
+
+// Update only teams
+export const updateTeamsOnly = async (teams: any[]): Promise<boolean> => {
+  if (!supabase) {
+    console.warn('Supabase not configured, skipping team update');
+    return false;
+  }
+
+  try {
+    if (teams && teams.length > 0) {
+      // Clear existing teams and insert new ones
+      await supabase.from(TEAMS_TABLE).delete().gt('id', '');
+      await supabase.from(TEAMS_TABLE).insert(
+        teams.map(team => ({
+          id: team.id,
+          name: team.name,
+          deleted: team.deleted || false
+        }))
+      );
+    }
+    return true;
+  } catch (error) {
+    console.error('Unexpected error updating teams only:', error);
+    return false;
+  }
+};
