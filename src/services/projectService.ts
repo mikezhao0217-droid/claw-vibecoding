@@ -311,6 +311,37 @@ export const addProject = async (project: UserProject): Promise<boolean> => {
   }
 
   try {
+    // Validate department and team exist, or use defaults
+    if (project.department) {
+      const { data: deptData, error: deptError } = await supabase
+        .from(DEPARTMENTS_TABLE)
+        .select('id')
+        .eq('id', project.department)
+        .single();
+
+      if (deptError || !deptData) {
+        console.warn(`Department with ID ${project.department} does not exist, using default`);
+        project.department = 'engineering'; // Default to engineering
+      }
+    } else {
+      project.department = 'engineering'; // Default if not provided
+    }
+
+    if (project.team) {
+      const { data: teamData, error: teamError } = await supabase
+        .from(TEAMS_TABLE)
+        .select('id')
+        .eq('id', project.team)
+        .single();
+
+      if (teamError || !teamData) {
+        console.warn(`Team with ID ${project.team} does not exist, using default`);
+        project.team = 'frontend'; // Default to frontend
+      }
+    } else {
+      project.team = 'frontend'; // Default if not provided
+    }
+
     const { error } = await supabase
       .from(USER_PROJECTS_TABLE)
       .insert([{
@@ -330,6 +361,7 @@ export const addProject = async (project: UserProject): Promise<boolean> => {
       return false;
     }
 
+    console.log(`Successfully added project: ${project.name} (${project.id})`);
     return true;
   } catch (error) {
     console.error('Unexpected error adding project:', error);
@@ -345,6 +377,35 @@ export const updateProject = async (project: UserProject): Promise<boolean> => {
   }
 
   try {
+    // First verify that the referenced department and team exist
+    if (project.department) {
+      const { data: deptData, error: deptError } = await supabase
+        .from(DEPARTMENTS_TABLE)
+        .select('id')
+        .eq('id', project.department)
+        .single();
+
+      if (deptError || !deptData) {
+        console.error(`Department with ID ${project.department} does not exist:`, deptError);
+        // Use a default department if the specified one doesn't exist
+        project.department = 'engineering'; // Default to engineering
+      }
+    }
+
+    if (project.team) {
+      const { data: teamData, error: teamError } = await supabase
+        .from(TEAMS_TABLE)
+        .select('id')
+        .eq('id', project.team)
+        .single();
+
+      if (teamError || !teamData) {
+        console.error(`Team with ID ${project.team} does not exist:`, teamError);
+        // Use a default team if the specified one doesn't exist
+        project.team = 'frontend'; // Default to frontend
+      }
+    }
+
     const { error } = await supabase
       .from(USER_PROJECTS_TABLE)
       .update({
@@ -388,6 +449,7 @@ export const deleteProject = async (projectId: string): Promise<boolean> => {
       return false;
     }
 
+    console.log(`Successfully deleted project with ID: ${projectId}`);
     return true;
   } catch (error) {
     console.error('Unexpected error deleting project:', error);
@@ -417,6 +479,7 @@ export const toggleMilestoneCompletion = async (
 
     if (error || !projectData) {
       console.error('Error fetching project or project not found:', error);
+      console.log(`Looking for project ID: ${projectId} and user ID: ${userId}`);
       return false;
     }
 
@@ -440,6 +503,7 @@ export const toggleMilestoneCompletion = async (
       return false;
     }
 
+    console.log(`Successfully toggled milestone ${milestoneId} for project ${projectId} and user ${userId}`);
     return true;
   } catch (error) {
     console.error('Error toggling milestone completion:', error);
