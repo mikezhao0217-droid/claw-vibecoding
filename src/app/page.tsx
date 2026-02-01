@@ -7,8 +7,13 @@ import { useProjectData } from '@/hooks/useProjectData';
 import { initializeDatabase } from '@/services/projectService';
 
 export default function Home() {
-  const { data, loading, toggleMilestoneCompletion, addProject, updateSingleProject, deleteProject } = useProjectData();
+  const { data, config, loading, toggleMilestoneCompletion, addProject, updateSingleProject, deleteProject, updatePageConfig } = useProjectData();
   const [currentUser] = useState("current-user"); // In a real app, this would come from authentication
+  const [isEditing, setIsEditing] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [editingConfig, setEditingConfig] = useState<any>(null);
   
   // Initialize database on component mount
   useEffect(() => {
@@ -18,10 +23,6 @@ export default function Home() {
     
     initDb();
   }, []);
-  const [isEditing, setIsEditing] = useState(false);
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [passwordInput, setPasswordInput] = useState('');
-  const [passwordError, setPasswordError] = useState('');
 
   const handlePasswordSubmit = () => {
     if (passwordInput === 'pimsvibe') {
@@ -31,6 +32,33 @@ export default function Home() {
       setPasswordInput('');
     } else {
       setPasswordError('密码错误，请重试');
+    }
+  };
+
+  // Configuration editing handlers
+  const startConfigEditing = () => {
+    if (config) {
+      setEditingConfig({ ...config });
+    }
+  };
+
+  const saveConfigChanges = () => {
+    if (editingConfig) {
+      updatePageConfig(editingConfig);
+      setEditingConfig(null);
+    }
+  };
+
+  const cancelConfigEditing = () => {
+    setEditingConfig(null);
+  };
+
+  const updateConfigField = (field: string, value: string) => {
+    if (editingConfig) {
+      setEditingConfig({
+        ...editingConfig,
+        [field]: value
+      });
     }
   };
 
@@ -75,7 +103,9 @@ export default function Home() {
       <div className="min-h-screen bg-zinc-50 dark:bg-black font-sans py-12">
         <div className="container mx-auto px-4">
           <div className="text-center py-20">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Web编码竞赛项目进度仪表板</h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+              {(config && config.projectName) || 'Web编码竞赛项目进度仪表板'}
+            </h1>
             <p className="text-lg text-gray-600 dark:text-gray-400">正在加载项目数据...</p>
           </div>
         </div>
@@ -88,7 +118,9 @@ export default function Home() {
       <div className="min-h-screen bg-zinc-50 dark:bg-black font-sans py-12">
         <div className="container mx-auto px-4">
           <div className="text-center py-20">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Web编码竞赛项目进度仪表板</h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+              {(config && config.projectName) || 'Web编码竞赛项目进度仪表板'}
+            </h1>
             <p className="text-lg text-red-600 dark:text-red-400">无法加载项目数据</p>
           </div>
         </div>
@@ -154,7 +186,19 @@ export default function Home() {
       <div className="container mx-auto px-4">
         <header className="mb-12 text-center">
           <div className="flex justify-between items-center mb-4">
-            <h1 className="text-4xl font-bold text-gray-900 dark:text-white">Web编码竞赛项目进度仪表板</h1>
+            {isEditing && editingConfig ? (
+              <input
+                type="text"
+                value={editingConfig.projectName || ''}
+                onChange={(e) => updateConfigField('projectName', e.target.value)}
+                className="text-4xl font-bold text-gray-900 dark:text-white bg-transparent border-b border-gray-300 dark:border-gray-600 focus:outline-none focus:border-blue-500"
+                onBlur={saveConfigChanges}
+              />
+            ) : (
+              <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
+                {(config && config.projectName) || 'Web编码竞赛项目进度仪表板'}
+              </h1>
+            )}
             <div className="flex space-x-3">
               {!isEditing ? (
                 <button
@@ -164,12 +208,38 @@ export default function Home() {
                   编辑模式
                 </button>
               ) : (
-                <button
-                  onClick={() => setIsEditing(false)}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  退出编辑
-                </button>
+                <>
+                  <button
+                    onClick={() => setIsEditing(false)}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    退出编辑
+                  </button>
+                  {editingConfig && (
+                    <button
+                      onClick={cancelConfigEditing}
+                      className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
+                    >
+                      取消
+                    </button>
+                  )}
+                  {editingConfig && (
+                    <button
+                      onClick={saveConfigChanges}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      保存
+                    </button>
+                  )}
+                  {!editingConfig && (
+                    <button
+                      onClick={startConfigEditing}
+                      className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                    >
+                      编辑配置
+                    </button>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -180,7 +250,19 @@ export default function Home() {
           {/* Overall company progress */}
           <div className="mt-8 bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 max-w-2xl mx-auto">
             <div className="flex justify-between items-center mb-3">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">公司整体进度</h2>
+              {isEditing && editingConfig ? (
+                <input
+                  type="text"
+                  value={editingConfig.companyProgressTitle || ''}
+                  onChange={(e) => updateConfigField('companyProgressTitle', e.target.value)}
+                  className="text-xl font-semibold text-gray-900 dark:text-white bg-transparent border-b border-gray-300 dark:border-gray-600 focus:outline-none focus:border-blue-500"
+                  onBlur={saveConfigChanges}
+                />
+              ) : (
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  {(config && config.companyProgressTitle) || '公司整体进度'}
+                </h2>
+              )}
               <span className="text-xl font-bold text-blue-600 dark:text-blue-400">{overallProgress}%</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-4 dark:bg-gray-700">
@@ -229,7 +311,19 @@ export default function Home() {
 
           {/* Department Progress Section */}
           <section className="mb-16">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">部门进度排行榜</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">
+              {isEditing && editingConfig ? (
+                <input
+                  type="text"
+                  value={editingConfig.departmentProgressTitle || ''}
+                  onChange={(e) => updateConfigField('departmentProgressTitle', e.target.value)}
+                  className="bg-transparent border-b border-gray-300 dark:border-gray-600 focus:outline-none focus:border-blue-500"
+                  onBlur={saveConfigChanges}
+                />
+              ) : (
+                (config && config.departmentProgressTitle) || '部门进度排行榜'
+              )}
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {departmentProgress.map((dept) => (
                 <GroupProgressCard 
@@ -243,7 +337,19 @@ export default function Home() {
 
           {/* Team Progress Section */}
           <section className="mb-16">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">小组进度排行榜</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">
+              {isEditing && editingConfig ? (
+                <input
+                  type="text"
+                  value={editingConfig.teamProgressTitle || ''}
+                  onChange={(e) => updateConfigField('teamProgressTitle', e.target.value)}
+                  className="bg-transparent border-b border-gray-300 dark:border-gray-600 focus:outline-none focus:border-blue-500"
+                  onBlur={saveConfigChanges}
+                />
+              ) : (
+                (config && config.teamProgressTitle) || '小组进度排行榜'
+              )}
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {teamProgress.map((team) => (
                 <GroupProgressCard 

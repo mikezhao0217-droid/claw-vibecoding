@@ -8,18 +8,26 @@ import {
   updateProjectData as updateProjectDataService,
   addProject as addProjectService,
   updateProject as updateProjectService,
-  deleteProject as deleteProjectService
+  deleteProject as deleteProjectService,
+  fetchPageConfig as fetchPageConfigService,
+  updatePageConfig as updatePageConfigService
 } from '@/services/projectService';
 
 export const useProjectData = () => {
   const [data, setData] = useState<ProjectData | null>(null);
+  const [config, setConfig] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const result = await fetchProjectData();
-        setData(result);
+        const [projectData, pageConfig] = await Promise.all([
+          fetchProjectData(),
+          fetchPageConfigService()
+        ]);
+        
+        setData(projectData);
+        setConfig(pageConfig);
       } catch (error) {
         console.error('Error fetching project data:', error);
       } finally {
@@ -194,13 +202,38 @@ export const useProjectData = () => {
     }
   };
 
+  // Configuration management functions
+  const updatePageConfig = async (updatedConfig: any) => {
+    try {
+      // Optimistically update the UI
+      setConfig(updatedConfig);
+
+      // Then update in Supabase
+      const success = await updatePageConfigService(updatedConfig);
+      
+      if (!success) {
+        // If the server update fails, revert the optimistic update
+        console.error('Failed to update page config in database');
+        const revertedConfig = await fetchPageConfigService();
+        setConfig(revertedConfig);
+      }
+    } catch (error) {
+      console.error('Error updating page config:', error);
+      // Revert the optimistic update in case of network error
+      const revertedConfig = await fetchPageConfigService();
+      setConfig(revertedConfig);
+    }
+  };
+
   return {
     data,
+    config,
     loading,
     toggleMilestoneCompletion,
     updateProjectData,
     addProject,
     updateSingleProject,
-    deleteProject
+    deleteProject,
+    updatePageConfig
   };
 };

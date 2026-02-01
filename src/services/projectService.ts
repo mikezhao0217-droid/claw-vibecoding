@@ -6,6 +6,7 @@ const PROJECTS_TABLE = 'projects';
 const USER_PROJECTS_TABLE = 'user_projects';
 const DEPARTMENTS_TABLE = 'departments';
 const TEAMS_TABLE = 'teams';
+const PAGE_CONFIG_TABLE = 'page_config';
 
 // Initialize Supabase with default data if needed
 export const initializeDatabase = async () => {
@@ -575,5 +576,113 @@ export const getTeamProgress = async (): Promise<any[]> => {
   } catch (error) {
     console.error('Error calculating team progress:', error);
     return [];
+  }
+};
+
+// Fetch page configuration from Supabase
+export const fetchPageConfig = async () => {
+  if (!supabase) {
+    // Fallback to default config if Supabase is not configured
+    return {
+      id: 'main',
+      projectName: 'Web编码竞赛项目',
+      companyProgressTitle: '公司整体进度',
+      departmentProgressTitle: '部门进度排行榜',
+      teamProgressTitle: '小组进度排行榜',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from(PAGE_CONFIG_TABLE)
+      .select('*')
+      .single(); // We expect only one config record with id='main'
+
+    if (error) {
+      if (error.code === 'PGRST116' || error.message.includes('Not Found')) {
+        // Config doesn't exist, initialize with default values
+        console.log('No page config found, initializing with default values...');
+        
+        const defaultConfig = {
+          id: 'main',
+          project_name: 'Web编码竞赛项目',
+          company_progress_title: '公司整体进度',
+          department_progress_title: '部门进度排行榜',
+          team_progress_title: '小组进度排行榜',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+
+        const insertResult = await supabase
+          .from(PAGE_CONFIG_TABLE)
+          .insert([defaultConfig]);
+
+        if (insertResult.error) {
+          console.error('Error inserting default config:', insertResult.error);
+          return null;
+        }
+
+        console.log('Default config inserted successfully');
+        return {
+          id: 'main',
+          projectName: defaultConfig.project_name,
+          companyProgressTitle: defaultConfig.company_progress_title,
+          departmentProgressTitle: defaultConfig.department_progress_title,
+          teamProgressTitle: defaultConfig.team_progress_title,
+          createdAt: defaultConfig.created_at,
+          updatedAt: defaultConfig.updated_at
+        };
+      } else {
+        console.error('Error fetching page config:', error);
+        return null;
+      }
+    }
+
+    // Map the database field names to our interface field names
+    return {
+      id: data.id,
+      projectName: data.project_name,
+      companyProgressTitle: data.company_progress_title,
+      departmentProgressTitle: data.department_progress_title,
+      teamProgressTitle: data.team_progress_title,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at
+    };
+  } catch (error) {
+    console.error('Unexpected error fetching page config:', error);
+    return null;
+  }
+};
+
+// Update page configuration in Supabase
+export const updatePageConfig = async (config: any) => {
+  if (!supabase) {
+    console.warn('Supabase not configured, skipping config update');
+    return false;
+  }
+
+  try {
+    const { error } = await supabase
+      .from(PAGE_CONFIG_TABLE)
+      .update({
+        project_name: config.projectName,
+        company_progress_title: config.companyProgressTitle,
+        department_progress_title: config.departmentProgressTitle,
+        team_progress_title: config.teamProgressTitle,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', config.id || 'main');
+
+    if (error) {
+      console.error('Error updating page config:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Unexpected error updating page config:', error);
+    return false;
   }
 };

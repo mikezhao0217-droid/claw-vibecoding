@@ -37,8 +37,20 @@ export interface GroupProgress {
   progressPercentage: number;
 }
 
+// 页面配置
+export interface PageConfig {
+  id: string;
+  projectName: string;        // 项目名称，如"Web编码竞赛项目"
+  companyProgressTitle: string;  // 公司整体进度标题
+  departmentProgressTitle: string; // 部门进度标题
+  teamProgressTitle: string;       // 小组进度标题
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ProjectData {
   departments: Department[];
   teams: Team[];
   userProjects: UserProject[]; // 所有用户的项目
+  config?: PageConfig;         // 页面配置
 }
