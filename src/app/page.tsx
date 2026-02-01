@@ -14,8 +14,6 @@ export default function Home() {
   const [passwordInput, setPasswordInput] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [editingConfig, setEditingConfig] = useState<any>(null);
-  // State to maintain consistent project order during session
-  const [initialProjectOrder, setInitialProjectOrder] = useState<string[]>([]);
   
   // Initialize database on component mount
   useEffect(() => {
@@ -25,25 +23,6 @@ export default function Home() {
     
     initDb();
   }, []);
-
-  // Update initial project order when data changes
-  useEffect(() => {
-    if (data && data.userProjects) {
-      // Calculate completion rates and sort projects by completion rate
-      const projectsWithProgress = data.userProjects
-        .filter(project => !project.deleted)
-        .map(project => {
-          const completedCount = project.milestones.filter(m => m.completed).length;
-          const totalCount = project.milestones.length;
-          const progressRate = totalCount > 0 ? completedCount / totalCount : 0;
-          return { ...project, progressRate };
-        })
-        .sort((a, b) => b.progressRate - a.progressRate); // Sort by progress rate (descending)
-      
-      // Store the sorted order
-      setInitialProjectOrder(projectsWithProgress.map(p => p.id));
-    }
-  }, [data]);
 
   const handlePasswordSubmit = () => {
     if (passwordInput === 'pimsvibe') {
@@ -149,21 +128,27 @@ export default function Home() {
     );
   }
 
-  // Show all non-deleted projects in the initially sorted order to maintain position stability
-  const userProjects = data?.userProjects
-    .filter(project => !project.deleted && initialProjectOrder.includes(project.id))
-    .sort((a, b) => {
-      // Sort based on the initial order maintained in state
-      return initialProjectOrder.indexOf(a.id) - initialProjectOrder.indexOf(b.id);
-    }) || [];
-
-  // Calculate progress statistics separately without affecting display order
-  const userProjectsWithProgress = userProjects.map(project => {
-    const completedCount = project.milestones.filter(m => m.completed).length;
-    const totalCount = project.milestones.length;
-    const progressPercentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
-    return { ...project, progressPercentage };
-  });
+  // Show all non-deleted projects
+  // In edit mode: keep projects in fixed order to prevent movement during interaction
+  // In view mode: sort projects by completion rate
+  let userProjects;
+  if (isEditing) {
+    // In edit mode, keep projects in a fixed order to prevent movement
+    userProjects = data?.userProjects
+      .filter(project => !project.deleted)
+      .sort((a, b) => a.id.localeCompare(b.id)) || []; // Fixed alphabetical order by ID
+  } else {
+    // In view mode, sort by completion rate (descending)
+    userProjects = data?.userProjects
+      .filter(project => !project.deleted)
+      .map(project => {
+        const completedCount = project.milestones.filter(m => m.completed).length;
+        const totalCount = project.milestones.length;
+        const progressPercentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+        return { ...project, progressPercentage };
+      })
+      .sort((a, b) => b.progressPercentage - a.progressPercentage) || []; // Sort by progress (descending)
+  }
 
   // Calculate overall company progress
   const allMilestones = data.userProjects.flatMap(project => project.milestones);
@@ -331,7 +316,7 @@ export default function Home() {
             </p>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {userProjectsWithProgress.map((project) => (
+              {userProjects.map((project) => (
                 <UserProjectCard 
                   key={project.id} 
                   project={project} 
