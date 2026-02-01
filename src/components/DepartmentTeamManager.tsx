@@ -101,13 +101,19 @@ const DepartmentTeamManager: React.FC<DepartmentTeamManagerProps> = ({
 
   // Delete department
   const deleteDepartment = async (id: string) => {
-    const success = await deleteDepartmentService(id);
-    if (success) {
-      onDepartmentsUpdate(
-        departments.map(dept => 
-          dept.id === id ? { ...dept, deleted: true } : dept
-        )
-      );
+    if (window.confirm(`确定要删除部门 "${departments.find(d => d.id === id)?.name}" 吗？`)) {
+      const success = await deleteDepartmentService(id);
+      if (success) {
+        onDepartmentsUpdate(
+          departments.map(dept => 
+            dept.id === id ? { ...dept, deleted: true } : dept
+          )
+        );
+        console.log(`Department ${id} marked as deleted`);
+      } else {
+        console.error(`Failed to delete department ${id}`);
+        alert('删除部门失败，请稍后重试');
+      }
     }
   };
 
@@ -161,13 +167,19 @@ const DepartmentTeamManager: React.FC<DepartmentTeamManagerProps> = ({
 
   // Delete team
   const deleteTeam = async (id: string) => {
-    const success = await deleteTeamService(id);
-    if (success) {
-      onTeamsUpdate(
-        teams.map(team => 
-          team.id === id ? { ...team, deleted: true } : team
-        )
-      );
+    if (window.confirm(`确定要删除团队 "${teams.find(t => t.id === id)?.name}" 吗？`)) {
+      const success = await deleteTeamService(id);
+      if (success) {
+        onTeamsUpdate(
+          teams.map(team => 
+            team.id === id ? { ...team, deleted: true } : team
+          )
+        );
+        console.log(`Team ${id} marked as deleted`);
+      } else {
+        console.error(`Failed to delete team ${id}`);
+        alert('删除团队失败，请稍后重试');
+      }
     }
   };
 
